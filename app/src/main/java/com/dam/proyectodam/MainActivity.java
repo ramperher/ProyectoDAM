@@ -7,8 +7,6 @@
  *
  *   Link del repositorio (GitHub):
  *      https://github.com/ramperher/ProyectoDAM
- *      Nueva línea
- *      y 2
  */
 
 package com.dam.proyectodam;
