@@ -1,6 +1,13 @@
-// COMENTARIO AÑADIDO DESDE GITHUB
-// Y respuesta desde Android Studio
-// Y respuesta desde nueva rama prueba, de Android Studio
+/* TRABAJO DISEÑO DE APLICACIONES MÓVILES
+ *   MainActivity.java
+ *
+ *   Por:
+ *      -Ramón Pérez Hernández
+ *      -Alberto Rodríguez Blázquez
+ *
+ *   Link del repositorio (GitHub):
+ *      https://github.com/ramperher/ProyectoDAM
+ */
 
 package com.dam.proyectodam;
 
