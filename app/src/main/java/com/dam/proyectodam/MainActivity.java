@@ -1,4 +1,5 @@
 /* TRABAJO DISEÑO DE APLICACIONES MÓVILES
+ *
  *   MainActivity.java
  *
  *   Por:
