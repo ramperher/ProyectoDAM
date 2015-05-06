@@ -1,51 +1,32 @@
-/* TRABAJO DISEÑO DE APLICACIONES MÓVILES
+package com.dam.proyectodam;
+
+import android.app.Activity;
+import android.os.Bundle;
+
+/**
  *
- * MainActivity.java
- *
- * Por:
- *  -Ramón Pérez Hernández
- *  -Alberto Rodríguez Blázquez
+ * Clase MainActivity.java. Proyecto ARTrack. Diseño de Aplicaciones Móviles. 4º GITT.
+ * Clase principal de servicio, que sirve de punto de partida para la toma de datos del GPS.
  *
  * Link del repositorio (GitHub):
  *  https://github.com/ramperher/ProyectoDAM
+ *
+ * @author Ramón Pérez, Alberto Rodríguez
+ * @version 0.1 alfa
+ *
  */
+public class MainActivity extends Activity {
 
-package com.dam.proyectodam;
-
-import android.support.v7.app.ActionBarActivity;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-
-
-public class MainActivity extends ActionBarActivity {
-
+    /**
+     * Método: onCreate
+     * Método ejecutado cuando se llama a la actividad.
+     *
+     * @param savedInstanceState instancia de la aplicación para recuperar datos.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Por ahora, sólo muestra el Hola mundo en el layout.
         setContentView(R.layout.activity_main);
-    }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 }
