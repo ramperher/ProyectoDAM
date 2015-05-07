@@ -2,6 +2,8 @@ package com.dam.proyectodam;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
 
 /**
  *
@@ -28,5 +30,16 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         // Por ahora, sólo muestra el Hola mundo en el layout.
         setContentView(R.layout.activity_main);
+    }
+
+    /**
+     * Método: comenzarEntrenamiento
+     * Método ejecutado cuando se pulsa el botón de esta actividad.
+     *
+     * @param view vista actual.
+     */
+    public void comenzarEntrenamiento(View view) {
+        // Prueba de que funciona.
+        Toast.makeText(getApplicationContext(),"Funciona", Toast.LENGTH_LONG).show();
     }
 }
