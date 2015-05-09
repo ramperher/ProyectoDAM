@@ -18,7 +18,7 @@ import android.view.Window;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.1 alfa
+ * @version 0.2 alfa
  *
  */
 public class SplashScreenActivity extends Activity {
@@ -48,8 +48,7 @@ public class SplashScreenActivity extends Activity {
             public void run() {
 
                 // Marcamos el intent con el lanzamiento de la próxima actividad (MainActivity).
-                Intent mainIntent = new Intent().setClass(
-                        SplashScreenActivity.this, MainActivity.class);
+                Intent mainIntent = new Intent(SplashScreenActivity.this, MainActivity.class);
                 startActivity(mainIntent);
 
                 // Cerramos esta actividad para que el usuario no pueda volver a ella pulsando atrás.
