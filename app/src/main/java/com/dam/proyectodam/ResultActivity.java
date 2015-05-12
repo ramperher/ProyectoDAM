@@ -51,6 +51,12 @@ public class ResultActivity extends Activity {
         startActivity(mapIntent);
     }
 
+    /**
+     * Método: mostrarDatos
+     * Actualiza los valores de distancia recorrida y velocidad media mostrados por pantalla.
+     *
+     * @param listado Arrat de objetos Point a partir del cual se realizan los calculos.
+     */
     public void mostrarDatos(ArrayList<Point> listado){
         Point punto;
         double d_recorrida=0;

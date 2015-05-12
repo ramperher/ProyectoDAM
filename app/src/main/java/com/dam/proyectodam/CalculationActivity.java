@@ -30,6 +30,9 @@ public class CalculationActivity extends Activity {
     private int TIEMPO_ACTUALIZACION = 0;                   // Se modifica en onCreate.
     private static final int DISTANCIA_ACTUALIZACION= 0;    // 0 metros (no afecta).
     Location ultima_localizacion;
+    LocationListener listener;
+    LocationManager locationManager;
+
 
 
     /**
@@ -68,6 +71,7 @@ public class CalculationActivity extends Activity {
      */
     public void finalizarEntrenamiento(View view) {
         // Marcamos el intent con el lanzamiento de la próxima actividad (ResultActivity).
+        locationManager.removeUpdates(listener);
         Intent resultIntent = new Intent(CalculationActivity.this, ResultActivity.class);
         startActivity(resultIntent);
 
@@ -79,7 +83,7 @@ public class CalculationActivity extends Activity {
     public void iniciarGPS(){
         // Referencia al gestor de localizacion del sistema.
         //Usando eso el movil usara tanto el GPS como las antenas de telefonia para posicionarse.
-        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
         //Tambien se inicia la base de datos.
         baseDatos=new BBDD(getApplicationContext());
@@ -91,7 +95,7 @@ public class CalculationActivity extends Activity {
         //INSERTAR AQUI PARA ENVIARLO AL MAPA.
 
         //Clase Locationlistener, llevar los metodos que son llamados al iniciar apagaga y actualizar los datos de posicion.
-        LocationListener listener = new LocationListener() {
+        listener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
                 //Esto es lo principal, registrar cambios, actualizar posicion en el mapa y guardarla en la base de datos.
