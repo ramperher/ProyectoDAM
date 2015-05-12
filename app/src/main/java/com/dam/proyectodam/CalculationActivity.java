@@ -20,17 +20,25 @@ import android.widget.Toast;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.1 alfa
+ * @version 0.2 alfa
  *
  */
 public class CalculationActivity extends Activity {
 
-    //Interesa que esten aqui porque van a ser accedidas desde diferentes metodos.
-    private BBDD baseDatos;
-    private int TIEMPO_ACTUALIZACION = 0;                   // Se modifica en onCreate.
-    private static final int DISTANCIA_ACTUALIZACION= 0;    // 0 metros (no afecta).
-    Location ultima_localizacion;
+    /* Distancia necesaria para actualizar los datos del GPS. Como no se va a usar, se
+    fija a 0. */
+    private static final int DISTANCIA_ACTUALIZACION = 0;
 
+    // Base de datos de la aplicación.
+    private BBDD baseDatos;
+
+    // Tiempo de actualización del GPS, que se modifica en onCreate (por eso no es final).
+    private int TIEMPO_ACTUALIZACION = 0;
+
+    // Última localización capturada, para cálculos de estadísticas.
+    private Location ultima_localizacion;
+    LocationListener listener;
+    LocationManager locationManager;
 
     /**
      * Método: onCreate
@@ -41,11 +49,15 @@ public class CalculationActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Mostramos el layout de la actividad.
         setContentView(R.layout.activity_calculation);
 
+        // Y fijamos el tiempo de actualización con el valor pasado por MainActivity.
         Bundle bundle = getIntent().getExtras();
         TIEMPO_ACTUALIZACION = bundle.getInt("t_act");
     }
+
     /**
      * Método: onBackPressed
      * Método ejecutado cuando se pulsa el botón atrás del terminal.
@@ -54,10 +66,10 @@ public class CalculationActivity extends Activity {
     @Override
     public void onBackPressed() {
         /* Lo único que hacemos es mostrar un Toast diciendo que no se
-        puede volver atrás. */
+        puede volver atrás (vamos a impedir salir de esta actividad, a no
+        ser que se pulse el botón). */
         Toast.makeText(getApplicationContext(),
                 "GPS activo: no se puede retroceder.", Toast.LENGTH_LONG).show();
-
     }
 
     /**
@@ -67,6 +79,8 @@ public class CalculationActivity extends Activity {
      * @param view vista actual.
      */
     public void finalizarEntrenamiento(View view) {
+        locationManager.removeUpdates(listener);
+
         // Marcamos el intent con el lanzamiento de la próxima actividad (ResultActivity).
         Intent resultIntent = new Intent(CalculationActivity.this, ResultActivity.class);
         startActivity(resultIntent);
@@ -75,11 +89,14 @@ public class CalculationActivity extends Activity {
         finish();
     }
 
-    //Metido qe inicia el GPS (y con el la BBDD).
-    public void iniciarGPS(){
+    /**
+     * Método: iniciarGPS
+     * Método que inicia el GPS (y, con él, la base de datos).
+     */
+    public void iniciarGPS() {
         // Referencia al gestor de localizacion del sistema.
         //Usando eso el movil usara tanto el GPS como las antenas de telefonia para posicionarse.
-        LocationManager locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
         //Tambien se inicia la base de datos.
         baseDatos=new BBDD(getApplicationContext());
@@ -91,7 +108,7 @@ public class CalculationActivity extends Activity {
         //INSERTAR AQUI PARA ENVIARLO AL MAPA.
 
         //Clase Locationlistener, llevar los metodos que son llamados al iniciar apagaga y actualizar los datos de posicion.
-        LocationListener listener = new LocationListener() {
+        listener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
                 //Esto es lo principal, registrar cambios, actualizar posicion en el mapa y guardarla en la base de datos.
@@ -183,6 +200,4 @@ public class CalculationActivity extends Activity {
         }
         return provider1.equals(provider2);
     }
-
-
 }

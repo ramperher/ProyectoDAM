@@ -1,8 +1,6 @@
 package com.dam.proyectodam;
 
 import java.util.ArrayList;
-import java.util.List;
-
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.content.ContentValues;
@@ -21,165 +19,314 @@ import android.util.Log;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.1 alfa
+ * @version 0.2 alfa
  *
  */
 public class BBDD extends SQLiteOpenHelper {
 
-    private static final int VERSION_BBDD=1;
-    private static final String NOMBRE_BBDD="gps.db";
-    private static final String TABLA_LOCALIZACION="CREATE TABLE IF NOT EXIST posiciones " +
-            "(id INTEGER PRIMARY KEY, latitud TEXT, longitud TEXT, velocidad TEXT, tiempo TEXT)";
-    private static final String DROP_LOCALIZACIONES="drop table if exist posiciones";
-    private static int indiceMaximo=100;         //Numero de puntos con lo que trabajara la aplicacion.
-    private static boolean sobreescribir=false;  //Indica que se ha superado el numero de pustos maximos en la BD.
-    private static int id=0;                     //Indice de la base de datos.
-    private static String sinVelocidad="0";      //Usado cuando no se dispone de la velocidad de movimiento.
+    // Versión de la base de datos.
+    private static final int VERSION_BBDD = 1;
 
+    // Nombre de la base de datos.
+    private static final String NOMBRE_BBDD = "gps.db";
+
+    /* Sentencia SQL para crear la tabla de posiciones del mapa.
+    En la base de datos, se guardará:
+    -Identificador, para clave primaria.
+    -Latitud y longitud del punto.
+    -Velocidad alcanzada en ese punto.
+    -Instante de captura de la posición.
+    La distancia y aceleración de cada intervalo se calculan a partir de estos datos. */
+    private static final String TABLA_LOCALIZACION="CREATE TABLE IF NOT EXIST posiciones " +
+            "(_id INTEGER PRIMARY KEY, latitud TEXT, longitud TEXT, velocidad TEXT, tiempo TEXT)";
+
+    // Sentencia SQL para borrar la tabla de posiciones del mapa.
+    private static final String DROP_LOCALIZACIONES="DROP TABLE IF EXIST posiciones";
+
+    /* Número de puntos con los que trabajará la aplicación como máximo (poniéndole un
+    límite a la base de datos). */
+    private static int indiceMaximo = 100;
+
+    // Indica que se ha superado el número de puntos máximos en la base de datos.
+    private static boolean sobreescribir = false;
+
+    // Índice de la base de datos (partimos de 1 y se va modificando).
+    private static int id = 1;
+
+    // Usado cuando no se dispone de la velocidad de movimiento.
+    private static String sinVelocidad="0";
+
+    /**
+     * Constructor de la clase BBDD
+     *
+     * @param context contexto de la base de datos.
+     */
     public BBDD (Context context){
         super(context, NOMBRE_BBDD, null, VERSION_BBDD);
     }
 
+    /**
+     * Método: onCreate
+     * Crea la tabla en la base de datos.
+     *
+     * @param db manejador de la base de datos.
+     */
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(TABLA_LOCALIZACION);
-        Log.d("BBDD", "Creacion de la BBDD()");
+        Log.d("BBDD", "Creación de la BBDD");
     }
 
+    /**
+     * Método: onUpgrade
+     * Actualiza la tabla en la base de datos, borrando y creándola de nuevo.
+     *
+     * @param db manejador de la base de datos.
+     * @param oldVersion antigua versión.
+     * @param newVersion nueva versión.
+     */
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL(DROP_LOCALIZACIONES);
         db.execSQL(TABLA_LOCALIZACION);
     }
 
+    /**
+     * Método: insertarPosicion
+     * Añade una posición en la base de datos, con sus atributos característicos.
+     *
+     * @param posicion objeto Location con la información de la posición a introducir.
+     * @return un booleano que indica si el proceso se ejecutó correctamente o no.
+     */
     public boolean insertarPosicion(Location posicion) {
+        // Valor de comprobación de operaciones con la base de datos.
         long salida=0;
+
+        // Llamamos a la base de datos.
         SQLiteDatabase db = getWritableDatabase();
         if (db != null) {
+            // Insertamos los valores a partir del Location.
             ContentValues valores = new ContentValues();
             valores.put("_id", id);
-            valores.put("latitud", posicion.convert(posicion.getLatitude(),Location.FORMAT_DEGREES));    //Como la BD no acepta Double, se guardaran como TEXT.
+
+            // Convertimos latitud, longitud y tiempo en String.
+            valores.put("latitud", posicion.convert(posicion.getLatitude(),Location.FORMAT_DEGREES));
             valores.put("longitud", posicion.convert(posicion.getLongitude(), Location.FORMAT_DEGREES));
             valores.put("tiempo", posicion.convert(posicion.getTime(), Location.FORMAT_SECONDS));
-            if(posicion.hasSpeed()){
+
+            // Comprobamos si podemos obtener datos de la velocidad para este punto (si no, ponemos 0).
+            if (posicion.hasSpeed())
                 valores.put("velocidad", String.valueOf(posicion.getSpeed()));
-            } else {
+            else
                 valores.put("velocidad", sinVelocidad);
+
+            // Comprobamos si estamos sobreescribiendo la BBDD por pasarnos del límite marcado.
+            if (sobreescribir) {
+                // Si se ha reiniciado el puntero de la BBDD, se han de actualizar valores, no introducirlos.
+                salida=db.update("posiciones", valores, "_id=" + id, null);
             }
-            //BBDD nueva rellenandose.
-            if(sobreescribir){
-                //Si se ha reiniciado el puntero de la BD, se han de actualizar valores, no introducirlos.
-                salida=db.update("posiciones", valores, "id=" + id,null);
-            } else{
+            else {
+                // En caso de funcionamiento normal, añadimos la posición a la tabla.
                 salida=db.insert("posiciones", null, valores);
             }
-            if(id<indiceMaximo){
-                id=id+1;            //Actualizamos al indice para en siguiente dato.
-            } else {
-                id=0;
-                sobreescribir=true;
+
+            // Y comprobamos si nos salimos del índice máximo de la tabla.
+            if (id < indiceMaximo) {
+                // De no salirnos, incrementamos el índice.
+                id += 1;
+            }
+            else
+            {
+                // Activamos sobreescritura.
+                id = 1;
+                sobreescribir = true;
             }
         }
+        // Cerramos la base de datos y devolvemos el booleano.
         db.close();
         return(salida>0);
     }
 
-    public boolean  borrarLocalizacion(int id) {
+    /**
+     * Método: borrarPosicion
+     * Borra la posición con el id que indiquemos como parámetro de entrada.
+     *
+     * @param id identificador de la posición en la tabla.
+     * @return un booleano que indica si el proceso se ejecutó correctamente o no.
+     */
+    public boolean borrarPosicion(int id) {
+        // Abrimos la base de datos.
         SQLiteDatabase db = getWritableDatabase();
+
+        // Valor a devolver, tras hacer el delete.
         long salida=0;
         if (db != null) {
+            // Borramos la entrada de la tabla.
             salida=db.delete("contactos", "_id=" + id, null);
         }
+        // Cerramos la base de datos y devolvemos el booleano.
         db.close();
         return(salida>0);
     }
 
-    public ArrayList<Point> listaPosiciones(){
+    /**
+     * Método: borrarPosiciones
+     * Borra el contenido de la tabla y elimina todas las posiciones guardadas, para
+     * comenzar con un nuevo entrenamiento.
+     *
+     * @return un booleano que indica si el proceso se ejecutó correctamente o no.
+     */
+    public boolean borrarPosiciones() {
+        // Abrimos la base de datos.
+        SQLiteDatabase db = getWritableDatabase();
+
+        // Valor a devolver, tras hacer el delete.
+        long salida=0;
+        if (db != null) {
+            // Vaciamos la tabla.
+            salida=db.delete("contactos", null, null);
+        }
+        // Cerramos la base de datos y devolvemos el booleano.
+        db.close();
+        return(salida>0);
+    }
+
+    /**
+     * Método: listarPosiciones
+     * Recupera todos los puntos de la base de datos con formato en base a la
+     * clase Point.
+     *
+     * @return una lista con todos los puntos guardados en la base de datos.
+     */
+    public ArrayList<Point> listarPosiciones() {
+        // Abrimos la base de datos, en modo lectura.
         SQLiteDatabase db = getReadableDatabase();
-        //Se leen todas las posiciones existentes en la BBDD, y se crean los objetos point donde devolverlas.
-        ArrayList<Point> localizaciones= new ArrayList<Point>();
+
+        // Se crea la lista de objetos Point donde se guardarán los datos de la BBDD.
+        ArrayList<Point> localizaciones = new ArrayList<Point>();
+
+        // Valores a recuperar de la base de datos.
         String[] valores_recuperar = {"latitud", "longitud", "velocidad", "tiempo"};
-        int puntero=id;
-        int indice=0;
-        if(db!=null){
-            Cursor c=db.query("posiciones", valores_recuperar, "id=" + id, null, null, null, null, null);
-            c.move(puntero);
-            do{
+
+        if(db!=null) {
+            /* Instanciamos la variable indice, iniciada a 1, para ordenar correctamente la lista
+            de Point (que tienen un id como atributo. */
+            int indice = 1;
+
+            // Devolvemos todas las filas.
+            Cursor c = db.query("posiciones", valores_recuperar, null, null, null, null, null, null);
+
+            /* Si estamos en sobreescritura, tomamos como primer punto la fila referenciada con el índice
+            id (que es el siguiente a sobreescribir, luego es el primer punto para nosotros). */
+            if (sobreescribir) {
+                /* Nos colocamos en la posición marcada por id (debe ser id-1, porque el primer índice
+                del cursor es el 0, no el 1. */
+                c.moveToPosition(id-1);
+
+                // Leemos todas las filas que quedan, hasta el final.
+                do {
+                    // Declaramos el punto.
+                    Point punto;
+
+                    // Creamos el objeto Location, y lo construimos con los valores guardados en la BBDD.
+                    Location localizacion = new Location("punto");
+                    localizacion.setLatitude(Location.convert(c.getString(1)));
+                    localizacion.setLongitude(Location.convert(c.getString(2)));
+                    localizacion.setSpeed(Float.parseFloat(c.getString(3)));
+                    localizacion.setTime(Long.parseLong(c.getString(4)));
+
+                    /* De ser el primer punto, no podemos sacar una distancia recorrida ni una aceleración,
+                    ya que se basan en el punto anterior. Por eso, los fijamos a 0, pero guardando el
+                    resto de valores en el punto antes declarado. */
+                    if (indice == 1) {
+                        punto = new Point(indice, localizacion.getLatitude(), localizacion.getLongitude(), 0,
+                                localizacion.getSpeed(), 0);
+                    }
+                    else {
+                        /* Si no es el primer punto, necesitamos acceder al punto anterior para conseguir
+                        la distancia y la aceleración. */
+                        c.moveToPrevious();
+                        Location localizacion_ant = new Location("punto_ant");
+                        localizacion_ant.setLatitude(Location.convert(c.getString(1)));
+                        localizacion_ant.setLongitude(Location.convert(c.getString(2)));
+                        localizacion_ant.setSpeed(Float.parseFloat(c.getString(3)));
+                        localizacion_ant.setTime(Long.parseLong(c.getString(4)));
+
+                        // Y calculamos la distancia con distanceTo, y la aceleración con (v-v_ant)/(t-t_ant).
+                        punto = new Point(indice, localizacion.getLatitude(), localizacion.getLongitude(),
+                                localizacion.distanceTo(localizacion_ant), localizacion.getSpeed(),
+                                (double) ((localizacion.getSpeed() - localizacion_ant.getSpeed()) / (localizacion.getTime() - localizacion_ant.getTime())));
+
+                        // Por último, volvemos a poner el cursor donde estaba.
+                        c.moveToNext();
+                    }
+                    // Actualizamos el índice.
+                    indice += 1;
+
+                    // Y añadimos el punto a la lista.
+                    localizaciones.add(punto);
+
+                } while (c.moveToNext());
+            }
+
+            /* Aquí, leeremos hasta llegar a la fila id-1, que será la última a leer (última fila de la
+            base de datos en caso de no haber sobreescritura, y último valor sobreescrito en caso contrario). */
+            for (int puntero = 1; puntero < id; puntero++) {
+                // Nos dirigimos a la fila que toque (le restamos 1, porque empieza en 0 el cursor).
+                c.moveToPosition(puntero-1);
+
+                // Declaramos el punto.
                 Point punto;
-                Location localizacion=new Location("puntoA");
-                localizacion.setLatitude(Location.convert(c.getString(0)));
+
+                // Y realizamos el mismo tratamiento que antes: tomamos el punto y lo guardamos en un Location.
+                Location localizacion = new Location("punto");
+                localizacion.setLatitude(Location.convert(c.getString(1)));
                 localizacion.setLongitude(Location.convert(c.getString(2)));
                 localizacion.setSpeed(Float.parseFloat(c.getString(3)));
                 localizacion.setTime(Long.parseLong(c.getString(4)));
-                if(indice==0){
-                    //Si el el primer punto, no puede sacarse una distancia recorrida ni una aceleracion.
-                    punto=new Point(indice, localizacion.getLatitude(),localizacion.getLongitude(),0,localizacion.getSpeed(),0);
-                } else {
-                    //Se necesita acceder al punto anterior para conseguir la distancia y la aceleracion.
-                    c.moveToPrevious();
-                    Location localizacion2=new Location("puntoB");
-                    localizacion2.setLatitude(Location.convert(c.getString(0)));
-                    localizacion2.setLongitude(Location.convert(c.getString(2)));
-                    localizacion2.setSpeed(Float.parseFloat(c.getString(3)));
-                    localizacion2.setTime(Long.parseLong(c.getString(4)));
-                    punto=new Point(indice, localizacion.getLatitude(),localizacion.getLongitude(),
-                            localizacion.distanceTo(localizacion2),localizacion.getSpeed(),
-                            (double)((localizacion.getSpeed()-localizacion2.getSpeed())/(localizacion2.getTime()-localizacion.getTime())));
-                            //Formula comun de la aceleracion: A=(V1-V0)/T
-                    c.moveToNext(); //Se vuelve a situar el cursor donde estaba.
-                }
-                indice=indice +1;
-                localizaciones.add(punto);
-            } while (c.moveToNext());
 
-            //Tambien es necesario anadir los puntos que se llevan sobreescritos en la pasada actual por la BD.
-            for (puntero=0; puntero<id; puntero++ ){
-                c.move(puntero);
-                Point punto;
-                if(puntero==0) {
-                    Location localizacion = new Location("puntoA");
-                    localizacion.setLatitude(Location.convert(c.getString(0)));
-                    localizacion.setLongitude(Location.convert(c.getString(2)));
-                    localizacion.setSpeed(Float.parseFloat(c.getString(3)));
-                    localizacion.setTime(Long.parseLong(c.getString(4)));
-                    if(id!=0){
+                /* Si es la primera posición, debemos comprobar si este punto es producto o no de una
+                sobreescritura. */
+                if (puntero == 1) {
+                    if (sobreescribir) {
+                        /* Caso de sobreescritura. Para obtener distancia y aceleración, tomamos los
+                        datos del punto anterior, que está en la última fila. */
                         c.moveToLast();
-                        Location localizacion2=new Location("puntoB");
-                        localizacion2.setLatitude(Location.convert(c.getString(0)));
-                        localizacion2.setLongitude(Location.convert(c.getString(2)));
-                        localizacion2.setSpeed(Float.parseFloat(c.getString(3)));
-                        localizacion2.setTime(Long.parseLong(c.getString(4)));
-                        punto=new Point(indice, localizacion.getLatitude(),localizacion.getLongitude(),
-                                localizacion.distanceTo(localizacion2),localizacion.getSpeed(),
-                                (double)((localizacion.getSpeed()-localizacion2.getSpeed())/(localizacion2.getTime()-localizacion.getTime())));
-                        //Formula comun de la aceleracion: A=(V1-V0)/T
-                    } else {
-                        punto=new Point(indice, localizacion.getLatitude(),localizacion.getLongitude(),0,localizacion.getSpeed(),0);
+                        Location localizacion_ant=new Location("punto_ant");
+                        localizacion_ant.setLatitude(Location.convert(c.getString(1)));
+                        localizacion_ant.setLongitude(Location.convert(c.getString(2)));
+                        localizacion_ant.setSpeed(Float.parseFloat(c.getString(3)));
+                        localizacion_ant.setTime(Long.parseLong(c.getString(4)));
+                        punto = new Point(indice, localizacion.getLatitude(),localizacion.getLongitude(),
+                                localizacion.distanceTo(localizacion_ant),localizacion.getSpeed(),
+                                (double)((localizacion.getSpeed()-localizacion_ant.getSpeed())/(localizacion.getTime()-localizacion_ant.getTime())));
                     }
-                    c.move(puntero);
-                } else {
-                    Location localizacion = new Location("puntoA");
-                    localizacion.setLatitude(Location.convert(c.getString(0)));
-                    localizacion.setLongitude(Location.convert(c.getString(2)));
-                    localizacion.setSpeed(Float.parseFloat(c.getString(3)));
-                    localizacion.setTime(Long.parseLong(c.getString(4)));
-
-                    Location localizacion2=new Location("puntoB");
-                    localizacion2.setLatitude(Location.convert(c.getString(0)));
-                    localizacion2.setLongitude(Location.convert(c.getString(2)));
-                    localizacion2.setSpeed(Float.parseFloat(c.getString(3)));
-                    localizacion2.setTime(Long.parseLong(c.getString(4)));
+                    else {
+                        /* Caso de no sobreescritura: es el primer punto, luego distancia y aceleración
+                        van a 0. */
+                        punto = new Point(indice, localizacion.getLatitude(),localizacion.getLongitude(),0,localizacion.getSpeed(),0);
+                    }
+                }
+                else {
+                    // No es la primera posición: leemos el punto anterior.
+                    c.moveToPrevious();
+                    Location localizacion_ant=new Location("punto_ant");
+                    localizacion_ant.setLatitude(Location.convert(c.getString(1)));
+                    localizacion_ant.setLongitude(Location.convert(c.getString(2)));
+                    localizacion_ant.setSpeed(Float.parseFloat(c.getString(3)));
+                    localizacion_ant.setTime(Long.parseLong(c.getString(4)));
 
                     punto=new Point(indice, localizacion.getLatitude(),localizacion.getLongitude(),
-                            localizacion.distanceTo(localizacion2),localizacion.getSpeed(),
-                            (double)((localizacion.getSpeed()-localizacion2.getSpeed())/(localizacion2.getTime()-localizacion.getTime())));
-                    //Formula comun de la aceleracion: A=(V1-V0)/T
+                            localizacion.distanceTo(localizacion_ant),localizacion.getSpeed(),
+                            (double)((localizacion.getSpeed()-localizacion_ant.getSpeed())/(localizacion.getTime()-localizacion_ant.getTime())));
                 }
+                // Al final, añadimos el punto a la lista.
                 localizaciones.add(punto);
             }
-            db.close();
             c.close();
         }
+        db.close();
+
         return localizaciones;
     }
 }

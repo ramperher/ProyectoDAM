@@ -12,5 +12,7 @@
     <string name="title_activity_calculation">CalculationActivity</string>
     <string name="title_activity_result">ResultActivity</string>
     <string name="title_activity_map">MapActivity</string>
+    <string name="dist_rec">Distancia recorrida: </string>
+    <string name="vel_media">Velocidad media: </string>
 
 </resources>
