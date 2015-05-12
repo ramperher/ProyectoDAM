@@ -1,7 +1,9 @@
 package com.dam.proyectodam;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -21,7 +23,7 @@ import android.widget.NumberPicker;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.3 alfa
+ * @version 0.4 alfa
  *
  */
 public class MainActivity extends ActionBarActivity {
@@ -33,7 +35,6 @@ public class MainActivity extends ActionBarActivity {
     // Tiempos mínimo y máximo de actualización del GPS (límites que tendremos para elegir).
     private final static int MIN_T_ACT = 1;
     private final static int MAX_T_ACT = 60;
-
 
     /* Tiempo de actualización del GPS, que puede ser modificado por el usuario. Será de 20
     segundos por defecto (está en milisegundos). */
@@ -48,6 +49,7 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         // Mostramos el layout de la actividad.
         setContentView(R.layout.activity_main);
     }
@@ -176,16 +178,60 @@ public class MainActivity extends ActionBarActivity {
      * @param view vista actual.
      */
     public void comenzarEntrenamiento(View view) {
-        // Marcamos el intent con el lanzamiento de la próxima actividad (CalculationActivity).
-        Intent calculationIntent = new Intent().setClass(
-                MainActivity.this, CalculationActivity.class);
+        /* Comprobamos si está activado el GPS. De no estarlo, no dejaremos acceder a la siguiente
+        actividad, y redirigiremos al usuario al menú del GPS para que lo active. */
+        final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
 
-        // Añadimos la variable tiempo_actualización, que se pasará como parámetro.
-        calculationIntent.putExtra("t_act", tiempo_actualizacion);
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            // Llamamos a la función que nos pasa al menú del GPS.
+            avisarGPSNoActivo();
+        }
+        else {
+            // Marcamos el intent con el lanzamiento de la próxima actividad (CalculationActivity).
+            Intent calculationIntent = new Intent().setClass(
+                    MainActivity.this, CalculationActivity.class);
 
-        // Y comenzamos la siguiente actividad.
-        startActivityForResult(calculationIntent, ENTRENAMIENTO);
+            // Añadimos la variable tiempo_actualización, que se pasará como parámetro.
+            calculationIntent.putExtra("t_act", tiempo_actualizacion);
+
+            // Y comenzamos la siguiente actividad.
+            startActivityForResult(calculationIntent, ENTRENAMIENTO);
+        }
     }
+
+    /**
+     * Método: avisarGPSNoActivo
+     * Indica al usuario que el GPS no está activo, y le pregunta si desea activarlo.
+     */
+    public void avisarGPSNoActivo() {
+        // Construimos la alerta con el texto a mostrar.
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        /* En caso de pulsar sí, sólo nos redirigirá al menú del GPS para que lo activemos manualmente
+        (ya que no se recomienda que una aplicación active el GPS por sí sola). En caso de pulsar no,
+        no se modificará nada. Notar que debemos tener activado el GPS para pasar a la siguiente
+        actividad, que captura los datos leídos del GPS. */
+        builder.setMessage("Tiene el GPS desactivado. ¿Quiere activarlo?")
+                .setCancelable(false)
+                .setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+                    public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                        dialog.cancel();
+                    }
+                });
+
+        // Lo creamos y lo mostramos.
+        final AlertDialog alert = builder.create();
+        alert.show();
+    }
+
+
+
+
 
     /**
      * Método: onActivityResult
