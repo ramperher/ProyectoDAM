@@ -1,14 +1,22 @@
 package com.dam.proyectodam;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 /**
  *
@@ -23,7 +31,7 @@ import android.widget.Toast;
  * @version 0.2 alfa
  *
  */
-public class CalculationActivity extends Activity {
+public class CalculationActivity extends FragmentActivity {
 
     /* Distancia necesaria para actualizar los datos del GPS. Como no se va a usar, se
     fija a 0. */
@@ -37,8 +45,21 @@ public class CalculationActivity extends Activity {
 
     // Última localización capturada, para cálculos de estadísticas.
     private Location ultima_localizacion;
-    LocationListener listener;
-    LocationManager locationManager;
+
+    // Listener y Manager para gestionar la localización.
+    private LocationListener locationListener;
+    private LocationManager locationManager;
+
+    // Mapa en el que se muestra la posición actual.
+    private GoogleMap mapa;
+
+    // TextView en los que mostrar los resultados por cada intervalo.
+    private TextView dist;
+    private TextView vel;
+    private TextView acel;
+
+    // Booleano para saber si ya hemos añadido algún punto a la base de datos.
+    private boolean BBDDusada = false;
 
     /**
      * Método: onCreate
@@ -53,9 +74,15 @@ public class CalculationActivity extends Activity {
         // Mostramos el layout de la actividad.
         setContentView(R.layout.activity_calculation);
 
-        // Y fijamos el tiempo de actualización con el valor pasado por MainActivity.
+        // Fijamos el tiempo de actualización con el valor pasado por MainActivity.
         Bundle bundle = getIntent().getExtras();
         TIEMPO_ACTUALIZACION = bundle.getInt("t_act");
+
+        // Establecemos el mapa.
+        mapa = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapCalc)).getMap();
+
+        // E iniciamos la captura de la localización.
+        iniciarGPS();
     }
 
     /**
@@ -79,7 +106,8 @@ public class CalculationActivity extends Activity {
      * @param view vista actual.
      */
     public void finalizarEntrenamiento(View view) {
-        locationManager.removeUpdates(listener);
+        // Desactivamos la actualización de la localización.
+        locationManager.removeUpdates(locationListener);
 
         // Marcamos el intent con el lanzamiento de la próxima actividad (ResultActivity).
         Intent resultIntent = new Intent(CalculationActivity.this, ResultActivity.class);
@@ -91,98 +119,131 @@ public class CalculationActivity extends Activity {
 
     /**
      * Método: iniciarGPS
-     * Método que inicia el GPS (y, con él, la base de datos).
+     * Método que inicia la captura de la localización vía GPS.
      */
     public void iniciarGPS() {
-        // Referencia al gestor de localizacion del sistema.
-        //Usando eso el movil usara tanto el GPS como las antenas de telefonia para posicionarse.
+        /* Instanciamos la referencia al gestor de localización del sistema. Tal y como se declara,
+         el móvil usará tanto el GPS como las antenas de telefonía para posicionarse. */
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
-        //Tambien se inicia la base de datos.
+        // También se inicia la base de datos.
         baseDatos=new BBDD(getApplicationContext());
 
-        //Para no hacer esperar demasiado al usuario se le muestra la ultima localizacion conocida mientras se busca la actual.
+        // Última posición conocida, mientras se busca la actual (ésta no se guarda en la base de datos).
         ultima_localizacion = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-        //Este punto no veo necesario guardarlo en la bd.
-        //INSERTAR AQUI PARA ENVIARLO AL MAPA.
-
-        //Clase Locationlistener, llevar los metodos que son llamados al iniciar apagaga y actualizar los datos de posicion.
-        listener = new LocationListener() {
+        // Objeto LocationListener, que actuará sólo cuando cambie la posición.
+        locationListener = new LocationListener() {
+            // Sólo actuaremos cuando cambie la posición.
             @Override
             public void onLocationChanged(Location location) {
-                //Esto es lo principal, registrar cambios, actualizar posicion en el mapa y guardarla en la base de datos.
-                //La linea siguiente deberia centrar el mapa en la posicion adquirica. Sustituir "mapa" por la referencia al mapa.
-                // mapa.setCenter(new GeoPoint((int)location.getLatitude(),(int)location.getLongitude()))   //Cuando se añada la API del Maps
+                /* Registraremos el cambio actualizando la posición en el mapa y guardándola en la
+                base de datos, sólo si merece la pena actualizar la posición. Si no, se ignora y
+                se espera a la siguiente. */
 
+                if(isBetterLocation(location, ultima_localizacion)) {
+                    // Obtenemos latitud y longitud, pasando a LatLng.
+                    int latitud = (int) (location.getLatitude() * 1E6);
+                    int longitud = (int) (location.getLongitude() * 1E6);
+                    LatLng latLng = new LatLng(latitud, longitud);
 
-                //Comprobamos que merece la pena actualizar la posicion. Si no, se ignora y se espera a la siguiente.
-                if(isBetterLocation(location, ultima_localizacion)){
-                    //Con esto se guarda la posicion en la BD
+                    // Añadimos un marcador.
+                    mapa.addMarker(new MarkerOptions().position(latLng).title("Posición actual"));
+
+                    // Y fijamos el centro del mapa.
+                    mapa.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+
+                    // Con esto, se guarda la posición en la base de datos.
                     baseDatos.insertarPosicion(location);
+
+                    /* Indicamos los cambios en los TextView (si es el primer punto válido, distancia
+                    y aceleración valen 0). */
+                    dist = (TextView) findViewById(R.id.textorelleno1);
+                    vel = (TextView) findViewById(R.id.textorelleno2);
+                    acel = (TextView) findViewById(R.id.textorelleno3);
+                    vel.setText(Float.toString(location.getSpeed()));
+                    if (!BBDDusada) {
+                        // Distancia y aceleración a 0.
+                        dist.setText("0");
+                        acel.setText("0");
+                        // Y actualizamos a true, para que no vuelva a entrar aquí.
+                        BBDDusada = true;
+                    }
+                    else {
+                        // Fijamos distancia y aceleración a sus valores normales.
+                        dist.setText(Float.toString(location.distanceTo(ultima_localizacion)));
+                        acel.setText(Float.toString(((location.getSpeed() - ultima_localizacion.getSpeed()) / (location.getTime() - ultima_localizacion.getTime()))));
+                    }
                 }
+
+                // Pase lo que pase, actualizamos la última posición capturada, para futuras llamadas.
+                ultima_localizacion = location;
 
                 //Si se quiere usar la posicion sin pasar por la base de datos, hacerlo desde aqui.
             }
 
+            // No hacemos nada en el resto de métodos.
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
+                Log.d("Calculation", "Estado cambiado.");
             }
 
-
+            @Override
             public void onProviderEnabled(String provider) {
-
+                Log.d("Calculation", "Proveedor activado.");
             }
 
             @Override
             public void onProviderDisabled(String provider) {
-
+                Log.d("Calculation", "Proveedor desactivado.");
             }
         };
-        //Actualizar usando GPS (lanzar LocationCahnged). Minimo cada 5 segundos o 10 metros.
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIEMPO_ACTUALIZACION, DISTANCIA_ACTUALIZACION, listener );
+        /* Actualizamos la posición usando GPS (que llamaría a onLocationChanged). Se actualiza sólo
+        con el tiempo (TIEMPO_ACTUALIZACION), no actuando la distancia. */
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIEMPO_ACTUALIZACION,
+                DISTANCIA_ACTUALIZACION, locationListener);
     }
 
-
-    //Logica molona que determina si es conveniente usar la nueva localizacion o esperarse a otra.
-    //Mejorar para que tenga tambien en cuenta la distancia.
-
-    /** Determines whether one Location reading is better than the current Location fix
-     * @param location  The new Location that you want to evaluate
-     * @param currentBestLocation  The current Location fix, to which you want to compare the new one
+    /**
+     * Método: isBetterLocation
+     * Método que determina si es conveniente usar la nueva localización o esperarse a otra.
+     * Se basa en el tiempo de actualización. Se escribe el código tal y como se obtuvo.
+     *
+     * @param location la nueva localización que se quiere evaluar.
+     * @param currentBestLocation la localización actual con la que se quiere comparar la nueva.
      */
     protected boolean isBetterLocation(Location location, Location currentBestLocation) {
         if (currentBestLocation == null) {
-            // A new location is always better than no location
+            // Una localización nueva es siempre mejor que no estar localizado.
             return true;
         }
 
-        // Check whether the new location fix is newer or older
+        // Comprueba si la nueva localización es nueva o vieja.
         long timeDelta = location.getTime() - currentBestLocation.getTime();
         boolean isSignificantlyNewer = timeDelta > TIEMPO_ACTUALIZACION;
         boolean isSignificantlyOlder = timeDelta < -TIEMPO_ACTUALIZACION;
         boolean isNewer = timeDelta > 0;
 
-        // If it's been more than two minutes since the current location, use the new location
-        // because the user has likely moved
+        /* Si han pasado más de 2 minutos desde la posición actual, se usa la nueva localización
+        porque el usuario debe haberse movido. */
         if (isSignificantlyNewer) {
             return true;
-            // If the new location is more than two minutes older, it must be worse
+            // Si la nueva posición es más antigua de 2 minutos, debe ser peor.
         } else if (isSignificantlyOlder) {
             return false;
         }
 
-        // Check whether the new location fix is more or less accurate
+        // Comprobamos si la nueva posición es más o menos exacta.
         int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
         boolean isLessAccurate = accuracyDelta > 0;
         boolean isMoreAccurate = accuracyDelta < 0;
         boolean isSignificantlyLessAccurate = accuracyDelta > 200;
 
-        // Check if the old and new location are from the same provider
+        // Comprobamos si ambas localizaciones vienen del mismo proveedor.
         boolean isFromSameProvider = isSameProvider(location.getProvider(),
                 currentBestLocation.getProvider());
 
-        // Determine location quality using a combination of timeliness and accuracy
+        // Determinamos la calidad de la posición usando una combinación de oportunidad y precisión.
         if (isMoreAccurate) {
             return true;
         } else if (isNewer && !isLessAccurate) {
@@ -193,11 +254,20 @@ public class CalculationActivity extends Activity {
         return false;
     }
 
-    /** Checks whether two providers are the same */
+    /**
+     * Método: isSameProvider
+     * Comprueba si los dos proveedores pasados como parámetros son iguales.
+     * Se utiliza en el método isBetterLocation.
+     *
+     * @param provider1 primero de los proveedores.
+     * @param provider2 segundo de los proveedores.
+     */
     private boolean isSameProvider(String provider1, String provider2) {
         if (provider1 == null) {
             return provider2 == null;
         }
+
+        // Comprobamos si los dos proveedores son iguales.
         return provider1.equals(provider2);
     }
 }

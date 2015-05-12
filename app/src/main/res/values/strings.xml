@@ -6,6 +6,11 @@
     <string name="picker_ok">Fijar</string>
     <string name="picker_ko">No fijar</string>
     <string name="text_main">Pulse en la imagen para comenzar el entrenamiento</string>
+    <string name="titulo_calc">ESTADÍSTICAS EN EL ÚLTIMO INTERVALO</string>
+    <string name="dist">Distancia recorrida (m): </string>
+    <string name="vel">Velocidad (m/s): </string>
+    <string name="ac">Aceleración (m/s^2): </string>
+    <string name="sin_valor">-</string>
     <string name="button_calculation">Finalizar entrenamiento</string>
     <string name="button_map">Ver recorrido en el mapa</string>
     <string name="button_main">Nuevo entrenamiento</string>

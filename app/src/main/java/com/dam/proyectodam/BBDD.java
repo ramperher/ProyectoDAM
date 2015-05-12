@@ -45,16 +45,16 @@ public class BBDD extends SQLiteOpenHelper {
 
     /* Número de puntos con los que trabajará la aplicación como máximo (poniéndole un
     límite a la base de datos). */
-    private static int indiceMaximo = 100;
-
-    // Indica que se ha superado el número de puntos máximos en la base de datos.
-    private static boolean sobreescribir = false;
-
-    // Índice de la base de datos (partimos de 1 y se va modificando).
-    private static int id = 1;
+    private static final int indiceMaximo = 100;
 
     // Usado cuando no se dispone de la velocidad de movimiento.
-    private static String sinVelocidad="0";
+    private static final String sinVelocidad="0";
+
+    // Indica que se ha superado el número de puntos máximos en la base de datos.
+    private boolean sobreescribir = false;
+
+    // Índice de la base de datos (partimos de 1 y se va modificando).
+    private int id = 1;
 
     /**
      * Constructor de la clase BBDD

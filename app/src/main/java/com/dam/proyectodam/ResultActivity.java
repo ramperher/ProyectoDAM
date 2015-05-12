@@ -23,8 +23,8 @@ import java.util.ArrayList;
  */
 public class ResultActivity extends Activity {
 
-    EditText editVMedia;
-    EditText editDRecorrida;
+    private EditText editVMedia;
+    private EditText editDRecorrida;
 
     /**
      * Método: onCreate
