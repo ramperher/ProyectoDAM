@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
+
+import java.util.ArrayList;
 
 /**
  *
@@ -26,10 +29,14 @@ public class ResultActivity extends Activity {
      *
      * @param savedInstanceState instancia de la aplicación para recuperar datos.
      */
+
+    EditText editVMedia,editDRecorrida;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_result);
+        editVMedia   = (EditText) findViewById(R.id.vel_media);
+        editDRecorrida = (EditText) findViewById(R.id.dist_media);
     }
 
     /**
@@ -43,6 +50,23 @@ public class ResultActivity extends Activity {
         Intent mapIntent = new Intent(ResultActivity.this, MapActivity.class);
         startActivity(mapIntent);
     }
+
+    public void mostrarDatos(ArrayList<Point> listado){
+        Point punto;
+        double d_recorrida=0;
+        double v_acumulada=0;
+        double v_media=0;
+        if(listado.size()>0) {
+            for (int i = 0; i < listado.size(); i++) {
+                d_recorrida = d_recorrida + listado.get(i).getDistancia();
+                v_acumulada = v_acumulada + listado.get(i).getVelocidad();
+            }
+            v_media = v_acumulada / listado.size();
+            editVMedia.setText(String.valueOf(v_media));
+            editDRecorrida.setText(String.valueOf(d_recorrida));
+        }
+    }
+
 
     /**
      * Método: volverMain
