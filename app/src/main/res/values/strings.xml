@@ -2,7 +2,9 @@
 <resources>
 
     <string name="app_name">ARTrack</string>
-    <string name="action_settings">Settings</string>
+    <string name="t_actualizacion">Tiempo de actualización</string>
+    <string name="picker_ok">Fijar</string>
+    <string name="picker_ko">No fijar</string>
     <string name="text_main">Pulse en la imagen para comenzar el entrenamiento</string>
     <string name="button_calculation">Finalizar entrenamiento</string>
     <string name="button_map">Ver recorrido en el mapa</string>

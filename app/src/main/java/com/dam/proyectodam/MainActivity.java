@@ -1,11 +1,16 @@
 package com.dam.proyectodam;
 
-import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.widget.Button;
+import android.widget.NumberPicker;
 
 /**
  *
@@ -16,14 +21,25 @@ import android.content.DialogInterface;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.2 alfa
+ * @version 0.3 alfa
  *
  */
-public class MainActivity extends Activity {
+public class MainActivity extends ActionBarActivity {
 
-    private final static int CALCULOS = 0;
+    /* Identificador del intent lanzado al comenzar el entrenamiento, para hacer las acciones
+    pertinentes al volver a esta actividad. */
+    private final static int ENTRENAMIENTO = 0;
 
-    /**
+    // Tiempos mínimo y máximo de actualización del GPS (límites que tendremos para elegir).
+    private final static int MIN_T_ACT = 1;
+    private final static int MAX_T_ACT = 60;
+
+
+    /* Tiempo de actualización del GPS, que puede ser modificado por el usuario. Será de 20
+    segundos por defecto (está en milisegundos). */
+    private int tiempo_actualizacion = 1000*20;
+
+     /**
      * Método: onCreate
      * Método ejecutado cuando se llama a la actividad.
      *
@@ -32,8 +48,94 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Por ahora, sólo muestra el Hola mundo en el layout.
+        // Mostramos el layout de la actividad.
         setContentView(R.layout.activity_main);
+    }
+
+    /**
+     * Método: onCreateOptionsMenu
+     * Método que lanza la barra de menú en la parte superior de la pantalla.
+     *
+     * @param menu menú a lanzar
+     * @return true, ya que funciona correctamente.
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Simplemente, lanzamos la barra de menú.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        return true;
+    }
+
+    /**
+     * Método: onOptionsItemSelected
+     * Método que realiza una acción u otra en función de la opción seleccionada
+     * en el menú superior.
+     *
+     * @param item opción seleccionada del menú.
+     * @return true en caso de ir bien, false en caso contrario.
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        boolean completado = false; // De partida, suponemos que no se realiza la acción.
+
+        /* Se comprueba si hemos pulsado tiempo, por si se añaden más opciones en el futuro
+        (se extendería a un switch). */
+
+        if (item.getItemId() == R.id.tiempo) {
+            // Modificamos el tiempo de actualización (dentro de mostrarNumberPicker).
+            mostrarNumberPicker();
+
+            // Fue bien: actualizamos a true.
+            completado = true;
+        }
+
+        return completado;
+    }
+
+    /**
+     * Método: mostrarNumberPicker
+     * Método que pide al usuario cambiar el tiempo de actualización del GPS a través
+     * de un NumberPicker.
+     */
+    public void mostrarNumberPicker()
+    {
+        // Generamos el Dialog, y fijamos título y layout.
+        final Dialog d = new Dialog(MainActivity.this);
+        d.setTitle("Fijar tiempo (en segundos)");
+        d.setContentView(R.layout.number_picker);
+
+        // Añadimos los dos botones del Dialog.
+        Button b1 = (Button) d.findViewById(R.id.button1);
+        Button b2 = (Button) d.findViewById(R.id.button2);
+
+        // Creamos el NumberPicker, con sus límites.
+        final NumberPicker np = (NumberPicker) d.findViewById(R.id.numberPicker1);
+        np.setMinValue(MIN_T_ACT);
+        np.setMaxValue(MAX_T_ACT);
+        np.setWrapSelectorWheel(false);
+
+        /* Fijamos los listener para los dos botones:
+            b1 (Fijar) sobreescribe el tiempo de actualización.
+            b2 (No fijar) no hace nada, y mantiene el tiempo que estaba.
+        */
+        b1.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v) {
+                tiempo_actualizacion = 1000 * np.getValue();
+                d.dismiss();
+            }
+        });
+        b2.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v) {
+                d.dismiss();
+            }
+        });
+        // Mostramos el Dialog.
+        d.show();
     }
 
     /**
@@ -77,7 +179,12 @@ public class MainActivity extends Activity {
         // Marcamos el intent con el lanzamiento de la próxima actividad (CalculationActivity).
         Intent calculationIntent = new Intent().setClass(
                 MainActivity.this, CalculationActivity.class);
-        startActivityForResult(calculationIntent, CALCULOS);
+
+        // Añadimos la variable tiempo_actualización, que se pasará como parámetro.
+        calculationIntent.putExtra("t_act", tiempo_actualizacion);
+
+        // Y comenzamos la siguiente actividad.
+        startActivityForResult(calculationIntent, ENTRENAMIENTO);
     }
 
     /**
@@ -89,7 +196,7 @@ public class MainActivity extends Activity {
      * @param data datos obtenidos como resultado.
      */
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == CALCULOS) {
+        if (requestCode == ENTRENAMIENTO) {
             if (resultCode == RESULT_OK) {
                 // Código cuando el resultado es correcto.
                 /* Se debería reiniciar la base de datos, o almacenar los datos

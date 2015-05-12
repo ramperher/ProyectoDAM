@@ -27,8 +27,8 @@ public class CalculationActivity extends Activity {
 
     //Interesa que esten aqui porque van a ser accedidas desde diferentes metodos.
     private BBDD baseDatos;
-    private static final int TIEMPO_ACTUALIZACION = 1000 * 20;      //Veinte segundos
-    private static final int DISTANCIA_ACTUALIZACION= 10;           //Diez metros.
+    private int TIEMPO_ACTUALIZACION = 0;                   // Se modifica en onCreate.
+    private static final int DISTANCIA_ACTUALIZACION= 0;    // 0 metros (no afecta).
     Location ultima_localizacion;
 
 
@@ -42,6 +42,9 @@ public class CalculationActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_calculation);
+
+        Bundle bundle = getIntent().getExtras();
+        TIEMPO_ACTUALIZACION = bundle.getInt("t_act");
     }
     /**
      * Método: onBackPressed

@@ -11,9 +11,18 @@ import android.database.Cursor;
 import android.location.Location;
 import android.util.Log;
 
-
 /**
- * Created by Alberto on 08/05/2015.
+ *
+ * Clase BBDD.java. Proyecto ARTrack. Diseño de Aplicaciones Móviles. 4º GITT.
+ * Clase que conforma la base de datos que se utilizará en la aplicación, con
+ * métodos de inserción, modificación, consulta y borrado de puntos.
+ *
+ * Link del repositorio (GitHub):
+ *  https://github.com/ramperher/ProyectoDAM
+ *
+ * @author Ramón Pérez, Alberto Rodríguez
+ * @version 0.1 alfa
+ *
  */
 public class BBDD extends SQLiteOpenHelper {
 
