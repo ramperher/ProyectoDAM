@@ -32,6 +32,10 @@ public class MapActivity extends FragmentActivity {
     // Base de datos de la aplicación.
     private BBDD baseDatos;
 
+    // Datos de interés de la base de datos recuperados de CalculationActivity.
+    private int puntosGuardados;
+    private boolean sobreescribir;
+
     // Polilínea a mostrar en el mapa.
     PolylineOptions polilinea;
 
@@ -49,10 +53,15 @@ public class MapActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
+        // Obtenemos el número de puntos guardados y si se sobreescribió o no la base de datos.
+        Bundle bundle = getIntent().getExtras();
+        puntosGuardados = bundle.getInt("puntosGuardados");
+        sobreescribir = bundle.getBoolean("sobreescribir");
+
         /* Se inicia la base de datos y se devuelve el listado de puntos, para construir
         la polilínea. */
         baseDatos=new BBDD(getApplicationContext());
-        construirPolyline(baseDatos.listarPosiciones());
+        construirPolyline(baseDatos.listarPosiciones(puntosGuardados, sobreescribir));
 
         // Y construimos el mapa, si no lo estaba ya.
         setUpMapIfNeeded();

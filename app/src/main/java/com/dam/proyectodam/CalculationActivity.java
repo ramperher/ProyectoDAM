@@ -37,6 +37,13 @@ public class CalculationActivity extends FragmentActivity {
     fija a 0. */
     private static final int DISTANCIA_ACTUALIZACION = 0;
 
+    /* Número de puntos con los que trabajará la aplicación como máximo (poniéndole un
+    límite a la base de datos). */
+    private static final int INDICE_MAXIMO = 100;
+
+    // Indica que se ha superado el número de puntos máximos en la base de datos.
+    private boolean sobreescribir = false;
+
     // Base de datos de la aplicación.
     private BBDD baseDatos;
 
@@ -49,6 +56,9 @@ public class CalculationActivity extends FragmentActivity {
     // Listener y Manager para gestionar la localización.
     private LocationListener locationListener;
     private LocationManager locationManager;
+
+    // Número de puntos guardados en la base de datos.
+    int puntosGuardados = 0;
 
     // Mapa en el que se muestra la posición actual.
     private GoogleMap mapa;
@@ -126,6 +136,11 @@ public class CalculationActivity extends FragmentActivity {
 
         // Marcamos el intent con el lanzamiento de la próxima actividad (ResultActivity).
         Intent resultIntent = new Intent(CalculationActivity.this, ResultActivity.class);
+
+        // Añadimos el número de puntos leídos y sobreescribir para pasarlo a ResultActivity.
+        resultIntent.putExtra("puntosGuardados", puntosGuardados);
+        resultIntent.putExtra("sobreescribir", sobreescribir);
+
         startActivity(resultIntent);
 
         // Y cerramos la actividad para no volver a ella al pulsar atrás.
@@ -169,25 +184,9 @@ public class CalculationActivity extends FragmentActivity {
                     mapa.animateCamera(CameraUpdateFactory.zoomIn());
                     mapa.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
 
-                    // Con esto, se guarda la posición en la base de datos.
-                    baseDatos.insertarPosicion(location);
-
-                    /* Indicamos los cambios en los TextView (si es el primer punto válido, la distancia
-                    vale 0). */
+                    // Indicamos los cambios en los TextView, primero con la velocidad.
                     vel.setText(Double.toString(location.getSpeed()*3.6));
-                    if (!BBDDusada) {
-                        // Distancia a 0.
-                        dist.setText("0");
 
-                        // Y actualizamos a true, para que no vuelva a entrar aquí.
-                        BBDDusada = true;
-                    }
-                    else {
-                        // Fijamos la distancia a su valor normal.
-                        dist.setText(Float.toString(location.distanceTo(ultima_localizacion)));
-                        Log.d("Calculation","Distancia: " + Float.toString(location.distanceTo(ultima_localizacion)));
-
-                    }
                     /* El estado de la aceleración puede ser acelerando, decelerando o velocidad constante,
                     dependiendo del resultado de la aceleración (que es vf-vo/tf-to). Aquí obviaremos el
                     tiempo, y nos limitaremos a la diferencia de velocidades (ya que tf-to siempre será >=0). */
@@ -197,6 +196,35 @@ public class CalculationActivity extends FragmentActivity {
                         acel.setText("Decelerando");
                     else
                         acel.setText("Velocidad constante");
+
+                    // La posición depende de si es el primer punto tomado o no.
+                    if (!BBDDusada) {
+                        // Distancia a 0.
+                        dist.setText("0");
+
+                        // Guardamos la posición en la base de datos con distancia 0.
+                        baseDatos.insertarPosicion(sobreescribir, ++puntosGuardados, location.getLatitude(), location.getLongitude(),
+                                0, location.getSpeed()*3.6, location.getTime()/1000);
+
+                        // Y actualizamos a true, para que no vuelva a entrar aquí.
+                        BBDDusada = true;
+                    }
+                    else {
+                        // Fijamos la distancia a su valor normal.
+                        dist.setText(Float.toString(location.distanceTo(ultima_localizacion)));
+                        Log.d("Calculation","Distancia: " + Float.toString(location.distanceTo(ultima_localizacion)));
+
+                        // Con esto, se guarda la posición en la base de datos.
+                        baseDatos.insertarPosicion(sobreescribir, ++puntosGuardados, location.getLatitude(), location.getLongitude(),
+                                location.distanceTo(ultima_localizacion), location.getSpeed()*3.6, location.getTime()/1000);
+                    }
+
+                    // Comprobamos que no se ha llegado al límite de puntos marcado.
+                    if (puntosGuardados == INDICE_MAXIMO) {
+                        // Ponemos de nuevo a 0 los puntos guardados, y ponemos sobreescribir a true.
+                        puntosGuardados = 0;
+                        sobreescribir = true;
+                    }
 
                     // Y actualizamos la última posición capturada.
                     ultima_localizacion = location;

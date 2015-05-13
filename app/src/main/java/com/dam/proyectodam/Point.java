@@ -23,7 +23,7 @@ public class Point {
     private int id;
     private double latitud;
     private double longitud;
-    private double distancia;
+    private float distancia;
     private double velocidad;
     private long instante;
 
@@ -37,7 +37,7 @@ public class Point {
      * @param velocidad velocidad dada entre este punto y el anterior.
      * @param instante instante de tiempo de captura del dato.
      */
-    public Point (int id, double latitud, double longitud, double distancia, double velocidad, long instante) {
+    public Point (int id, double latitud, double longitud, float distancia, double velocidad, long instante) {
         this.id = id;
         this.latitud = latitud;
         this.longitud = longitud;
@@ -112,7 +112,7 @@ public class Point {
      *
      * @return dicha distancia.
      */
-    public double getDistancia() {
+    public float getDistancia() {
         return this.distancia;
     }
 
@@ -122,7 +122,7 @@ public class Point {
      *
      * @param distancia dicha distancia.
      */
-    public void setDistancia(double distancia) {
+    public void setDistancia(float distancia) {
         this.distancia = distancia;
     }
 

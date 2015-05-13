@@ -33,6 +33,10 @@ public class ResultActivity extends Activity {
     // Base de datos de la aplicación.
     private BBDD baseDatos;
 
+    // Datos de interés de la base de datos recuperados de CalculationActivity.
+    private int puntosGuardados;
+    private boolean sobreescribir;
+
     /**
      * Método: onCreate
      * Método ejecutado cuando se llama a la actividad.
@@ -48,10 +52,15 @@ public class ResultActivity extends Activity {
         vel_media = (TextView) findViewById(R.id.textorelleno5);
         duracion = (TextView) findViewById(R.id.textorelleno6);
 
+        // Obtenemos el número de puntos guardados y si se sobreescribió o no la base de datos.
+        Bundle bundle = getIntent().getExtras();
+        puntosGuardados = bundle.getInt("puntosGuardados");
+        sobreescribir = bundle.getBoolean("sobreescribir");
+
         /* Se inicia la base de datos y se devuelve el listado de puntos, que se
         pasa a mostrarDatos. */
         baseDatos=new BBDD(getApplicationContext());
-        mostrarDatos(baseDatos.listarPosiciones());
+        mostrarDatos(baseDatos.listarPosiciones(puntosGuardados, sobreescribir));
 
         Log.d("Result", "Actividad preparada y datos mostrados");
     }
@@ -86,7 +95,7 @@ public class ResultActivity extends Activity {
             }
             /* La distancia sí es la suma, pero la velocidad es media; luego dividimos
             entre el número de puntos. */
-            v_media = v_acumulada / listado.size();
+            v_media = v_acumulada/listado.size();
 
             // Y los mostramos en los TextView.
             dist_rec.setText(Double.toString(d_recorrida));
@@ -108,6 +117,11 @@ public class ResultActivity extends Activity {
 
         // Marcamos el intent con el lanzamiento de la próxima actividad (MapActivity).
         Intent mapIntent = new Intent(ResultActivity.this, MapActivity.class);
+
+        // Añadimos el número de puntos leídos y sobreescribir para pasarlo a ResultActivity.
+        mapIntent.putExtra("puntosGuardados", puntosGuardados);
+        mapIntent.putExtra("sobreescribir", sobreescribir);
+
         startActivity(mapIntent);
     }
 
