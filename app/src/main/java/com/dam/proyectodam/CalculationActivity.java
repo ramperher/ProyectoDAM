@@ -28,7 +28,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.3 alfa
+ * @version 0.4 alfa
  *
  */
 public class CalculationActivity extends FragmentActivity {
@@ -132,10 +132,6 @@ public class CalculationActivity extends FragmentActivity {
         // Última posición conocida, mientras se busca la actual (ésta no se guarda en la base de datos).
         ultima_localizacion = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-        // PRUEBA PARA VER SI FUNCIONA
-        baseDatos.insertarPosicion(ultima_localizacion);
-
-
         // Objeto LocationListener, que actuará sólo cuando cambie la posición.
         locationListener = new LocationListener() {
             // Sólo actuaremos cuando cambie la posición.
@@ -158,8 +154,12 @@ public class CalculationActivity extends FragmentActivity {
                     mapa.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,15));
                     mapa.animateCamera(CameraUpdateFactory.zoomIn());
                     mapa.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
+
                     // Con esto, se guarda la posición en la base de datos.
-                    //baseDatos.insertarPosicion(location);
+                    baseDatos.insertarPosicion(location);
+
+                    // Y actualizamos la última posición capturada.
+                    ultima_localizacion = location;
 
                     /* Indicamos los cambios en los TextView (si es el primer punto válido, la distancia
                     vale 0). */
@@ -189,11 +189,6 @@ public class CalculationActivity extends FragmentActivity {
                             acel.setText("Velocidad constante");
                     }
                 }
-
-                // Pase lo que pase, actualizamos la última posición capturada, para futuras llamadas.
-                ultima_localizacion = location;
-
-                //Si se quiere usar la posicion sin pasar por la base de datos, hacerlo desde aqui.
             }
 
             // No hacemos nada en el resto de métodos.

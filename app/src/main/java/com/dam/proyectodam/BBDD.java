@@ -37,11 +37,11 @@ public class BBDD extends SQLiteOpenHelper {
     -Velocidad alcanzada en ese punto.
     -Instante de captura de la posición.
     La distancia de cada intervalo se calcula a partir de estos datos. */
-    private static final String TABLA_LOCALIZACION="CREATE TABLE IF NOT EXIST posiciones " +
+    private static final String TABLA_LOCALIZACION="CREATE TABLE IF NOT EXISTS posiciones " +
             "(_id INTEGER PRIMARY KEY, latitud TEXT, longitud TEXT, velocidad TEXT, tiempo TEXT)";
 
     // Sentencia SQL para borrar la tabla de posiciones del mapa.
-    private static final String DROP_LOCALIZACIONES="DROP TABLE IF EXIST posiciones";
+    private static final String DROP_LOCALIZACIONES="DROP TABLE IF EXISTS posiciones";
 
     /* Número de puntos con los que trabajará la aplicación como máximo (poniéndole un
     límite a la base de datos). */
@@ -109,17 +109,12 @@ public class BBDD extends SQLiteOpenHelper {
             ContentValues valores = new ContentValues();
             valores.put("_id", id);
 
-            // Convertimos latitud, longitud y tiempo (pasando de ms a s) en String.
-            valores.put("latitud", posicion.convert(posicion.getLatitude(),Location.FORMAT_DEGREES));
-            valores.put("longitud", posicion.convert(posicion.getLongitude(), Location.FORMAT_DEGREES));
-            valores.put("tiempo", posicion.convert(posicion.getTime()*1000, Location.FORMAT_SECONDS));
-
-            /* Comprobamos si podemos obtener datos de la velocidad para este punto (si no, ponemos 0).
-            Se convierte, también, a km/h. */
-            if (posicion.hasSpeed())
-                valores.put("velocidad", String.valueOf(posicion.getSpeed()*3.6));
-            else
-                valores.put("velocidad", sinVelocidad);
+            /* Convertimos latitud, longitud, tiempo (pasando de ms a s) y velocidad (pasando
+            de m/s a km/h) en String. */
+            valores.put("latitud", Double.toString(posicion.getLatitude()));
+            valores.put("longitud", Double.toString(posicion.getLongitude()));
+            valores.put("tiempo", Long.toString(posicion.getTime()*1000));
+            valores.put("velocidad", Double.toString(posicion.getSpeed()*3.6));
 
             // Comprobamos si estamos sobreescribiendo la BBDD por pasarnos del límite marcado.
             if (sobreescribir) {
@@ -231,8 +226,8 @@ public class BBDD extends SQLiteOpenHelper {
 
                     // Creamos el objeto Location, y lo construimos con los valores guardados en la BBDD.
                     Location localizacion = new Location("punto");
-                    localizacion.setLatitude(Location.convert(c.getString(1)));
-                    localizacion.setLongitude(Location.convert(c.getString(2)));
+                    localizacion.setLatitude(Double.parseDouble(c.getString(1)));
+                    localizacion.setLongitude(Double.parseDouble(c.getString(2)));
                     localizacion.setSpeed(Float.parseFloat(c.getString(3)));
                     localizacion.setTime(Long.parseLong(c.getString(4)));
 
@@ -248,8 +243,8 @@ public class BBDD extends SQLiteOpenHelper {
                         la distancia. */
                         c.moveToPrevious();
                         Location localizacion_ant = new Location("punto_ant");
-                        localizacion_ant.setLatitude(Location.convert(c.getString(1)));
-                        localizacion_ant.setLongitude(Location.convert(c.getString(2)));
+                        localizacion_ant.setLatitude(Double.parseDouble(c.getString(1)));
+                        localizacion_ant.setLongitude(Double.parseDouble(c.getString(2)));
                         localizacion_ant.setSpeed(Float.parseFloat(c.getString(3)));
                         localizacion_ant.setTime(Long.parseLong(c.getString(4)));
 
@@ -280,8 +275,8 @@ public class BBDD extends SQLiteOpenHelper {
 
                 // Y realizamos el mismo tratamiento que antes: tomamos el punto y lo guardamos en un Location.
                 Location localizacion = new Location("punto");
-                localizacion.setLatitude(Location.convert(c.getString(1)));
-                localizacion.setLongitude(Location.convert(c.getString(2)));
+                localizacion.setLatitude(Double.parseDouble(c.getString(1)));
+                localizacion.setLongitude(Double.parseDouble(c.getString(2)));
                 localizacion.setSpeed(Float.parseFloat(c.getString(3)));
                 localizacion.setTime(Long.parseLong(c.getString(4)));
 
@@ -293,8 +288,8 @@ public class BBDD extends SQLiteOpenHelper {
                         datos del punto anterior, que está en la última fila. */
                         c.moveToLast();
                         Location localizacion_ant=new Location("punto_ant");
-                        localizacion_ant.setLatitude(Location.convert(c.getString(1)));
-                        localizacion_ant.setLongitude(Location.convert(c.getString(2)));
+                        localizacion_ant.setLatitude(Double.parseDouble(c.getString(1)));
+                        localizacion_ant.setLongitude(Double.parseDouble(c.getString(2)));
                         localizacion_ant.setSpeed(Float.parseFloat(c.getString(3)));
                         localizacion_ant.setTime(Long.parseLong(c.getString(4)));
                         punto = new Point(indice, localizacion.getLatitude(),localizacion.getLongitude(),
@@ -309,8 +304,8 @@ public class BBDD extends SQLiteOpenHelper {
                     // No es la primera posición: leemos el punto anterior.
                     c.moveToPrevious();
                     Location localizacion_ant=new Location("punto_ant");
-                    localizacion_ant.setLatitude(Location.convert(c.getString(1)));
-                    localizacion_ant.setLongitude(Location.convert(c.getString(2)));
+                    localizacion_ant.setLatitude(Double.parseDouble(c.getString(1)));
+                    localizacion_ant.setLongitude(Double.parseDouble(c.getString(2)));
                     localizacion_ant.setSpeed(Float.parseFloat(c.getString(3)));
                     localizacion_ant.setTime(Long.parseLong(c.getString(4)));
 
