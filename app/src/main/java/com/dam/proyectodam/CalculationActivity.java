@@ -80,6 +80,7 @@ public class CalculationActivity extends FragmentActivity {
 
         // Establecemos el mapa.
         mapa = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapCalc)).getMap();
+        //mapa.setMyLocationEnabled(true);
 
         // E iniciamos la captura de la localización.
         iniciarGPS();
@@ -127,7 +128,7 @@ public class CalculationActivity extends FragmentActivity {
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
         // También se inicia la base de datos.
-        baseDatos=new BBDD(getApplicationContext());
+        //baseDatos=new BBDD(getApplicationContext());
 
         // Última posición conocida, mientras se busca la actual (ésta no se guarda en la base de datos).
         ultima_localizacion = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -140,21 +141,22 @@ public class CalculationActivity extends FragmentActivity {
                 /* Registraremos el cambio actualizando la posición en el mapa y guardándola en la
                 base de datos, sólo si merece la pena actualizar la posición. Si no, se ignora y
                 se espera a la siguiente. */
+                Log.d("Calculation","Cambio en la localización");
 
                 if(isBetterLocation(location, ultima_localizacion)) {
                     // Obtenemos latitud y longitud, pasando a LatLng.
-                    int latitud = (int) (location.getLatitude() * 1E6);
-                    int longitud = (int) (location.getLongitude() * 1E6);
-                    LatLng latLng = new LatLng(latitud, longitud);
+                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
-                    // Añadimos un marcador.
+                    // Añadimos un marcador, limpiando el que pusimos antes.
+                    mapa.clear();
                     mapa.addMarker(new MarkerOptions().position(latLng).title("Posición actual"));
 
-                    // Y fijamos el centro del mapa.
-                    mapa.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
-
+                    // Y fijamos el centro del mapa, añadiendo animaciones.
+                    mapa.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,15));
+                    mapa.animateCamera(CameraUpdateFactory.zoomIn());
+                    mapa.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
                     // Con esto, se guarda la posición en la base de datos.
-                    baseDatos.insertarPosicion(location);
+                    //baseDatos.insertarPosicion(location);
 
                     /* Indicamos los cambios en los TextView (si es el primer punto válido, distancia
                     y aceleración valen 0). */
