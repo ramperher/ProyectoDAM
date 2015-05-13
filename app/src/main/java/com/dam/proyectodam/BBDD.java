@@ -217,9 +217,11 @@ public class BBDD extends SQLiteOpenHelper {
             // Devolvemos todas las filas.
             Cursor c = db.query("posiciones", valores_recuperar, null, null, null, null, null, null);
 
+            // PRUEBA: CON ESTO, LEE DE PRINCIPIO A FIN.
+
             /* Si estamos en sobreescritura, tomamos como primer punto la fila referenciada con el índice
             id (que es el siguiente a sobreescribir, luego es el primer punto para nosotros). */
-            if (sobreescribir) {
+            if (!sobreescribir) {
                 /* Nos colocamos en la posición marcada por id (debe ser id-1, porque el primer índice
                 del cursor es el 0, no el 1. */
                 c.moveToPosition(id-1);

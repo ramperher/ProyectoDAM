@@ -172,9 +172,6 @@ public class CalculationActivity extends FragmentActivity {
                     // Con esto, se guarda la posición en la base de datos.
                     baseDatos.insertarPosicion(location);
 
-                    // Y actualizamos la última posición capturada.
-                    ultima_localizacion = location;
-
                     /* Indicamos los cambios en los TextView (si es el primer punto válido, la distancia
                     vale 0). */
                     vel.setText(Double.toString(location.getSpeed()*3.6));
@@ -200,6 +197,9 @@ public class CalculationActivity extends FragmentActivity {
                         acel.setText("Decelerando");
                     else
                         acel.setText("Velocidad constante");
+
+                    // Y actualizamos la última posición capturada.
+                    ultima_localizacion = location;
                 }
             }
 
