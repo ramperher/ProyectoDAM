@@ -28,7 +28,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.2 alfa
+ * @version 0.3 alfa
  *
  */
 public class CalculationActivity extends FragmentActivity {
@@ -80,7 +80,9 @@ public class CalculationActivity extends FragmentActivity {
 
         // Establecemos el mapa.
         mapa = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapCalc)).getMap();
-        //mapa.setMyLocationEnabled(true);
+
+        // También se inicia la base de datos.
+        baseDatos=new BBDD(getApplicationContext());
 
         // E iniciamos la captura de la localización.
         iniciarGPS();
@@ -127,11 +129,12 @@ public class CalculationActivity extends FragmentActivity {
          el móvil usará tanto el GPS como las antenas de telefonía para posicionarse. */
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
-        // También se inicia la base de datos.
-        //baseDatos=new BBDD(getApplicationContext());
-
         // Última posición conocida, mientras se busca la actual (ésta no se guarda en la base de datos).
         ultima_localizacion = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+        // PRUEBA PARA VER SI FUNCIONA
+        baseDatos.insertarPosicion(ultima_localizacion);
+
 
         // Objeto LocationListener, que actuará sólo cuando cambie la posición.
         locationListener = new LocationListener() {
@@ -158,23 +161,32 @@ public class CalculationActivity extends FragmentActivity {
                     // Con esto, se guarda la posición en la base de datos.
                     //baseDatos.insertarPosicion(location);
 
-                    /* Indicamos los cambios en los TextView (si es el primer punto válido, distancia
-                    y aceleración valen 0). */
+                    /* Indicamos los cambios en los TextView (si es el primer punto válido, la distancia
+                    vale 0). */
                     dist = (TextView) findViewById(R.id.textorelleno1);
                     vel = (TextView) findViewById(R.id.textorelleno2);
                     acel = (TextView) findViewById(R.id.textorelleno3);
-                    vel.setText(Float.toString(location.getSpeed()));
+                    vel.setText(Double.toString(location.getSpeed()*3.6));
                     if (!BBDDusada) {
-                        // Distancia y aceleración a 0.
+                        // Distancia a 0.
                         dist.setText("0");
-                        acel.setText("0");
+
                         // Y actualizamos a true, para que no vuelva a entrar aquí.
                         BBDDusada = true;
                     }
                     else {
-                        // Fijamos distancia y aceleración a sus valores normales.
+                        // Fijamos la distancia a su valor normal.
                         dist.setText(Float.toString(location.distanceTo(ultima_localizacion)));
-                        acel.setText(Float.toString(((location.getSpeed() - ultima_localizacion.getSpeed()) / (location.getTime() - ultima_localizacion.getTime()))));
+
+                        /* El estado de la aceleración puede ser acelerando, decelerando o velocidad constante,
+                        dependiendo del resultado de la aceleración (que es vf-vo/tf-to). Aquí da igual la
+                        conversión de la velocidad; simplemente, queremos saber el signo de la aceleración. */
+                        if (((location.getSpeed() - ultima_localizacion.getSpeed()) / ((location.getTime() - ultima_localizacion.getTime())*1000)) > 0)
+                            acel.setText("Acelerando");
+                        else if (((location.getSpeed() - ultima_localizacion.getSpeed()) / ((location.getTime() - ultima_localizacion.getTime())*1000)) < 0)
+                            acel.setText("Decelerando");
+                        else
+                            acel.setText("Velocidad constante");
                     }
                 }
 
