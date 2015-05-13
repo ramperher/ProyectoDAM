@@ -67,23 +67,25 @@ public class MapActivity extends FragmentActivity {
      * @param puntos la lista de puntos del mapa.
      */
     private void construirPolyline(ArrayList<Point> puntos) {
-        // Instanciamos la polilínea.
-        polilinea = new PolylineOptions();
+        if (puntos.size() > 0) {
+            // Instanciamos la polilínea.
+            polilinea = new PolylineOptions();
 
-        // Y vamos añadiendo latitud y longitud, conforme leemos la lista de puntos.
-        for (int i = 0; i < puntos.size(); i++) {
-            polilinea.add(new LatLng(puntos.get(i).getLatitud(), puntos.get(i).getLongitud()));
+            // Y vamos añadiendo latitud y longitud, conforme leemos la lista de puntos.
+            for (int i = 0; i < puntos.size(); i++) {
+                polilinea.add(new LatLng(puntos.get(i).getLatitud(), puntos.get(i).getLongitud()));
 
-            // Si es el primer punto, lo añadimos a puntoInicial, para hacer el zoom en el mapa.
-            if (i == 0)
-                puntoInicial = new LatLng(puntos.get(i).getLatitud(), puntos.get(i).getLongitud());
+                // Si es el primer punto, lo añadimos a puntoInicial, para hacer el zoom en el mapa.
+                if (i == 0)
+                    puntoInicial = new LatLng(puntos.get(i).getLatitud(), puntos.get(i).getLongitud());
+            }
+            // Y añadimos otros atributos (grosor, color y marcar como geodésica).
+            polilinea = polilinea.width(5);
+            polilinea = polilinea.color(Color.BLUE);
+            polilinea = polilinea.geodesic(true);
+
+            Log.d("Map", "Polilínea construida");
         }
-        // Y añadimos otros atributos (grosor, color y marcar como geodésica).
-        polilinea=polilinea.width(5);
-        polilinea=polilinea.color(Color.BLUE);
-        polilinea=polilinea.geodesic(true);
-
-        Log.d("Map", "Polilínea construida");
     }
 
     /**
@@ -106,12 +108,14 @@ public class MapActivity extends FragmentActivity {
      * Método que añade las líneas al mapa a partir de los puntos de la base de datos.
      */
     private void addLines() {
-        // Añadimos las líneas al mapa.
-        googleMap.addPolyline(polilinea);
+        if (polilinea != null && puntoInicial != null) {
+            // Añadimos las líneas al mapa.
+            googleMap.addPolyline(polilinea);
 
-        // Y con moveCamera, hacemos zoom en el punto inicial del recorrido.
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(puntoInicial, 15));
+            // Y con moveCamera, hacemos zoom en el punto inicial del recorrido.
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(puntoInicial, 15));
 
-        Log.d("Map", "Mapa con líneas añadidas");
+            Log.d("Map", "Mapa con líneas añadidas");
+        }
     }
 }
