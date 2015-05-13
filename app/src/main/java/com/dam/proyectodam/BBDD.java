@@ -89,6 +89,7 @@ public class BBDD extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL(DROP_LOCALIZACIONES);
         db.execSQL(TABLA_LOCALIZACION);
+        Log.d("BBDD", "Actualización de la BBDD");
     }
 
     /**
@@ -120,10 +121,12 @@ public class BBDD extends SQLiteOpenHelper {
             if (sobreescribir) {
                 // Si se ha reiniciado el puntero de la BBDD, se han de actualizar valores, no introducirlos.
                 salida=db.update("posiciones", valores, "_id=" + id, null);
+                Log.d("BBDD", "Sobreescritura de la BBDD, posición " + id);
             }
             else {
                 // En caso de funcionamiento normal, añadimos la posición a la tabla.
                 salida=db.insert("posiciones", null, valores);
+                Log.d("BBDD", "Añadimos un valor a la BBDD, posición " + id);
             }
 
             // Y comprobamos si nos salimos del índice máximo de la tabla.
@@ -158,7 +161,8 @@ public class BBDD extends SQLiteOpenHelper {
         long salida=0;
         if (db != null) {
             // Borramos la entrada de la tabla.
-            salida=db.delete("contactos", "_id=" + id, null);
+            salida=db.delete("posiciones", "_id=" + id, null);
+            Log.d("BBDD", "Borramos un valor de la BBDD, posición " + id);
         }
         // Cerramos la base de datos y devolvemos el booleano.
         db.close();
@@ -180,7 +184,8 @@ public class BBDD extends SQLiteOpenHelper {
         long salida=0;
         if (db != null) {
             // Vaciamos la tabla.
-            salida=db.delete("contactos", null, null);
+            salida=db.delete("posiciones", null, null);
+            Log.d("BBDD", "Tabla de la BBDD vaciada");
         }
         // Cerramos la base de datos y devolvemos el booleano.
         db.close();
@@ -221,6 +226,7 @@ public class BBDD extends SQLiteOpenHelper {
 
                 // Leemos todas las filas que quedan, hasta el final.
                 do {
+                    Log.d("BBDD", "Punto sobreescrito, posición " + (id+indice-1));
                     // Declaramos el punto.
                     Point punto;
 
@@ -267,6 +273,8 @@ public class BBDD extends SQLiteOpenHelper {
             /* Aquí, leeremos hasta llegar a la fila id-1, que será la última a leer (última fila de la
             base de datos en caso de no haber sobreescritura, y último valor sobreescrito en caso contrario). */
             for (int puntero = 1; puntero < id; puntero++) {
+                Log.d("BBDD", "Punto no sobreescrito, posición " + puntero);
+
                 // Nos dirigimos a la fila que toque (le restamos 1, porque empieza en 0 el cursor).
                 c.moveToPosition(puntero-1);
 
@@ -317,6 +325,8 @@ public class BBDD extends SQLiteOpenHelper {
             }
             c.close();
         }
+        Log.d("BBDD", "Puntos devueltos");
+
         db.close();
 
         return localizaciones;

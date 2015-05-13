@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Window;
 
 /**
@@ -59,5 +60,6 @@ public class SplashScreenActivity extends Activity {
         // Simulamos el proceso de carga al iniciarse la aplicación.
         Timer timer = new Timer();
         timer.schedule(task, SPLASH_SCREEN_DELAY);
+        Log.d("Splash", "Splash programado");
     }
 }

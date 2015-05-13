@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -40,6 +41,9 @@ public class MainActivity extends ActionBarActivity {
     segundos por defecto (está en milisegundos). */
     private int tiempo_actualizacion = 1000*20;
 
+    // Base de datos de la aplicación.
+    private BBDD baseDatos;
+
      /**
      * Método: onCreate
      * Método ejecutado cuando se llama a la actividad.
@@ -52,6 +56,8 @@ public class MainActivity extends ActionBarActivity {
 
         // Mostramos el layout de la actividad.
         setContentView(R.layout.activity_main);
+
+        Log.d("Main", "Actividad principal desplegada");
     }
 
     /**
@@ -65,6 +71,8 @@ public class MainActivity extends ActionBarActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Simplemente, lanzamos la barra de menú.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        Log.d("Main", "Mostramos el menú");
 
         return true;
     }
@@ -85,6 +93,8 @@ public class MainActivity extends ActionBarActivity {
         (se extendería a un switch). */
 
         if (item.getItemId() == R.id.tiempo) {
+            Log.d("Main", "Pulsamos el botón de tiempo");
+
             // Modificamos el tiempo de actualización (dentro de mostrarNumberPicker).
             mostrarNumberPicker();
 
@@ -138,6 +148,8 @@ public class MainActivity extends ActionBarActivity {
         });
         // Mostramos el Dialog.
         d.show();
+
+        Log.d("Main", "Mostramos el NumberPicker");
     }
 
     /**
@@ -147,6 +159,8 @@ public class MainActivity extends ActionBarActivity {
      */
     @Override
     public void onBackPressed() {
+        Log.d("Main", "Pulsamos el botón de ir atrás");
+
         // Construimos la alerta que saldrá al pulsar el botón.
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setCancelable(false);
@@ -183,10 +197,14 @@ public class MainActivity extends ActionBarActivity {
         final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
 
         if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            Log.d("Main", "GPS no activo");
+
             // Llamamos a la función que nos pasa al menú del GPS.
             avisarGPSNoActivo();
         }
         else {
+            Log.d("Main", "Pasamos a CalculationActivity");
+
             // Marcamos el intent con el lanzamiento de la próxima actividad (CalculationActivity).
             Intent calculationIntent = new Intent().setClass(
                     MainActivity.this, CalculationActivity.class);
@@ -227,11 +245,9 @@ public class MainActivity extends ActionBarActivity {
         // Lo creamos y lo mostramos.
         final AlertDialog alert = builder.create();
         alert.show();
+
+        Log.d("Main", "Pasamos a los ajustes del GPS");
     }
-
-
-
-
 
     /**
      * Método: onActivityResult
@@ -243,14 +259,12 @@ public class MainActivity extends ActionBarActivity {
      */
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == ENTRENAMIENTO) {
-            if (resultCode == RESULT_OK) {
-                // Código cuando el resultado es correcto.
-                /* Se debería reiniciar la base de datos, o almacenar los datos
-                para la nueva medida si vamos a guardar varios entrenamientos. */
-            }
-            if (resultCode == RESULT_CANCELED) {
-                // Código cuando no hay resultado.
-            }
+            Log.d("Main", "Hemos vuelto de la actividad lanzada");
+
+             // Se reinicia la base de datos.
+             baseDatos=new BBDD(getApplicationContext());
+             baseDatos.borrarPosiciones();
+             Log.d("Main", "Tabla en BBDD borrada al volver de actividad");
         }
     }
 }

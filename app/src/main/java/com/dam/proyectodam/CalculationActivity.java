@@ -86,6 +86,8 @@ public class CalculationActivity extends FragmentActivity {
 
         // E iniciamos la captura de la localización.
         iniciarGPS();
+
+        Log.d("Calculation", "Actividad preparada");
     }
 
     /**
@@ -100,6 +102,8 @@ public class CalculationActivity extends FragmentActivity {
         ser que se pulse el botón). */
         Toast.makeText(getApplicationContext(),
                 "GPS activo: no se puede retroceder.", Toast.LENGTH_LONG).show();
+
+        Log.d("Calculation", "Pulsado botón de ir atrás");
     }
 
     /**
@@ -111,6 +115,9 @@ public class CalculationActivity extends FragmentActivity {
     public void finalizarEntrenamiento(View view) {
         // Desactivamos la actualización de la localización.
         locationManager.removeUpdates(locationListener);
+
+        Log.d("Calculation", "Paramos actualización de localización");
+        Log.d("Calculation", "Pasamos a ResultActivity");
 
         // Marcamos el intent con el lanzamiento de la próxima actividad (ResultActivity).
         Intent resultIntent = new Intent(CalculationActivity.this, ResultActivity.class);
@@ -143,6 +150,8 @@ public class CalculationActivity extends FragmentActivity {
                 Log.d("Calculation","Cambio en la localización");
 
                 if(isBetterLocation(location, ultima_localizacion)) {
+                    Log.d("Calculation", "Cambio significativo en la localización");
+
                     // Obtenemos latitud y longitud, pasando a LatLng.
                     LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
@@ -177,17 +186,18 @@ public class CalculationActivity extends FragmentActivity {
                     else {
                         // Fijamos la distancia a su valor normal.
                         dist.setText(Float.toString(location.distanceTo(ultima_localizacion)));
+                        Log.d("Calculation","Distancia: " + Float.toString(location.distanceTo(ultima_localizacion)));
 
-                        /* El estado de la aceleración puede ser acelerando, decelerando o velocidad constante,
-                        dependiendo del resultado de la aceleración (que es vf-vo/tf-to). Aquí da igual la
-                        conversión de la velocidad; simplemente, queremos saber el signo de la aceleración. */
-                        if (((location.getSpeed() - ultima_localizacion.getSpeed()) / ((location.getTime() - ultima_localizacion.getTime())*1000)) > 0)
-                            acel.setText("Acelerando");
-                        else if (((location.getSpeed() - ultima_localizacion.getSpeed()) / ((location.getTime() - ultima_localizacion.getTime())*1000)) < 0)
-                            acel.setText("Decelerando");
-                        else
-                            acel.setText("Velocidad constante");
                     }
+                    /* El estado de la aceleración puede ser acelerando, decelerando o velocidad constante,
+                    dependiendo del resultado de la aceleración (que es vf-vo/tf-to). Aquí da igual la
+                    conversión de la velocidad; simplemente, queremos saber el signo de la aceleración. */
+                    if (((location.getSpeed() - ultima_localizacion.getSpeed()) / ((location.getTime() - ultima_localizacion.getTime())*1000)) > 0)
+                        acel.setText("Acelerando");
+                    else if (((location.getSpeed() - ultima_localizacion.getSpeed()) / ((location.getTime() - ultima_localizacion.getTime())*1000)) < 0)
+                        acel.setText("Decelerando");
+                    else
+                        acel.setText("Velocidad constante");
                 }
             }
 
