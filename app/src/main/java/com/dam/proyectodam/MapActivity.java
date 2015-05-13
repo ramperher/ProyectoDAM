@@ -3,12 +3,15 @@ package com.dam.proyectodam;
 import android.os.Bundle;
 import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.util.ArrayList;
 
 /**
  *
@@ -19,16 +22,21 @@ import com.google.android.gms.maps.model.PolylineOptions;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.1 alfa
+ * @version 0.2 alfa
  *
  */
 public class MapActivity extends FragmentActivity {
-    private static final LatLng LOWER_MANHATTAN = new LatLng(40.722543,
-            -73.998585);
-    private static final LatLng TIMES_SQUARE = new LatLng(40.7577, -73.9857);
-    private static final LatLng BROOKLYN_BRIDGE = new LatLng(40.7057, -73.9964);
-
+    // Mapa en el que mostrar las líneas del recorrido.
     private GoogleMap googleMap;
+
+    // Base de datos de la aplicación.
+    private BBDD baseDatos;
+
+    // Polilínea a mostrar en el mapa.
+    PolylineOptions polilinea;
+
+    // Punto de partida, para el zoom.
+    LatLng puntoInicial;
 
     /**
      * Método: onCreate
@@ -40,29 +48,70 @@ public class MapActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
+
+        /* Se inicia la base de datos y se devuelve el listado de puntos, para construir
+        la polilínea. */
+        baseDatos=new BBDD(getApplicationContext());
+        construirPolyline(baseDatos.listarPosiciones());
+
+        // Y construimos el mapa, si no lo estaba ya.
         setUpMapIfNeeded();
+
+        Log.d("Map", "Polilínea y mapa construidos");
     }
 
+    /**
+     * Método: construirPolyline
+     * Método que construye una polilínea a partir de una lista de Point.
+     *
+     * @param puntos la lista de puntos del mapa.
+     */
+    private void construirPolyline(ArrayList<Point> puntos) {
+        // Instanciamos la polilínea.
+        polilinea = new PolylineOptions();
+
+        // Y vamos añadiendo latitud y longitud, conforme leemos la lista de puntos.
+        for (int i = 0; i < puntos.size(); i++) {
+            polilinea.add(new LatLng(puntos.get(i).getLatitud(), puntos.get(i).getLongitud()));
+
+            // Si es el primer punto, lo añadimos a puntoInicial, para hacer el zoom en el mapa.
+            if (i == 0)
+                puntoInicial = new LatLng(puntos.get(i).getLatitud(), puntos.get(i).getLongitud());
+        }
+        // Y añadimos otros atributos (grosor, color y marcar como geodésica).
+        polilinea=polilinea.width(5);
+        polilinea=polilinea.color(Color.BLUE);
+        polilinea=polilinea.geodesic(true);
+
+        Log.d("Map", "Polilínea construida");
+    }
+
+    /**
+     * Método: setUpMapIfNeeded
+     * Método que establece el mapa si es necesario (si ya está creado, no se hace nada).
+     */
     private void setUpMapIfNeeded() {
-        // check if we have got the googleMap already
+        // Comprobamos si ya teníamos el mapa.
         if (googleMap == null) {
-            googleMap = ((SupportMapFragment) getSupportFragmentManager()
-                    .findFragmentById(R.id.map)).getMap();
+            googleMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
             if (googleMap != null) {
+                // Y si está preparado, añadimos las líneas.
                 addLines();
             }
         }
     }
 
+    /**
+     * Método: addLines
+     * Método que añade las líneas al mapa a partir de los puntos de la base de datos.
+     */
     private void addLines() {
+        // Añadimos las líneas al mapa.
+        googleMap.addPolyline(polilinea);
 
-        googleMap
-                .addPolyline((new PolylineOptions())
-                        .add(TIMES_SQUARE, BROOKLYN_BRIDGE, LOWER_MANHATTAN,
-                                TIMES_SQUARE).width(5).color(Color.BLUE)
-                        .geodesic(true));
-        // move camera to zoom on map
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(LOWER_MANHATTAN,
-                13));
+        // Y con moveCamera, hacemos zoom en el punto inicial del recorrido.
+        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(puntoInicial, 15));
+
+        Log.d("Map", "Mapa con líneas añadidas");
     }
 }

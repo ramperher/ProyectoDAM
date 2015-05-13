@@ -28,6 +28,7 @@ public class ResultActivity extends Activity {
     // TextView en los que mostrar los resultados finales.
     private TextView dist_rec;
     private TextView vel_media;
+    private TextView duracion;
 
     // Base de datos de la aplicación.
     private BBDD baseDatos;
@@ -45,6 +46,7 @@ public class ResultActivity extends Activity {
 
         dist_rec = (TextView) findViewById(R.id.textorelleno4);
         vel_media = (TextView) findViewById(R.id.textorelleno5);
+        duracion = (TextView) findViewById(R.id.textorelleno6);
 
         /* Se inicia la base de datos y se devuelve el listado de puntos, que se
         pasa a mostrarDatos. */
@@ -65,14 +67,22 @@ public class ResultActivity extends Activity {
         double d_recorrida = 0;
         double v_acumulada = 0;
 
-        // Y también la velocidad media.
+        // También la velocidad media y duración del entrenamiento.
         double v_media;
+        long duracion = 0;
 
         // Mostraremos resultados si hay algún punto en la lista.
         if (listado.size()>0) {
             for (int i = 0; i < listado.size(); i++) {
                 d_recorrida += listado.get(i).getDistancia();
                 v_acumulada += listado.get(i).getVelocidad();
+
+                // Cálculo del tiempo: instante final-inicial.
+                if (i == 0)
+                    duracion = -listado.get(i).getInstante();
+                if (i == listado.size()-1)
+                    duracion += listado.get(i).getInstante();
+
             }
             /* La distancia sí es la suma, pero la velocidad es media; luego dividimos
             entre el número de puntos. */
@@ -81,6 +91,7 @@ public class ResultActivity extends Activity {
             // Y los mostramos en los TextView.
             dist_rec.setText(Double.toString(d_recorrida));
             vel_media.setText(Double.toString(v_media));
+            this.duracion.setText(Long.toString(duracion));
         }
 
         Log.d("Result", "Datos calculados y mostrados");

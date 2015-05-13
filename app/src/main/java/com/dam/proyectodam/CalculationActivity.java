@@ -190,11 +190,11 @@ public class CalculationActivity extends FragmentActivity {
 
                     }
                     /* El estado de la aceleración puede ser acelerando, decelerando o velocidad constante,
-                    dependiendo del resultado de la aceleración (que es vf-vo/tf-to). Aquí da igual la
-                    conversión de la velocidad; simplemente, queremos saber el signo de la aceleración. */
-                    if (((location.getSpeed() - ultima_localizacion.getSpeed()) / ((location.getTime() - ultima_localizacion.getTime())*1000)) > 0)
+                    dependiendo del resultado de la aceleración (que es vf-vo/tf-to). Aquí obviaremos el
+                    tiempo, y nos limitaremos a la diferencia de velocidades (ya que tf-to siempre será >=0). */
+                    if ((location.getSpeed() - ultima_localizacion.getSpeed()) > 0)
                         acel.setText("Acelerando");
-                    else if (((location.getSpeed() - ultima_localizacion.getSpeed()) / ((location.getTime() - ultima_localizacion.getTime())*1000)) < 0)
+                    else if ((location.getSpeed() - ultima_localizacion.getSpeed()) < 0)
                         acel.setText("Decelerando");
                     else
                         acel.setText("Velocidad constante");

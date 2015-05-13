@@ -6,24 +6,26 @@ package com.dam.proyectodam;
  * Clase con los atributos que formarán parte de los atributos de la tabla en la
  * base de datos, y representan a un punto en el mapa, con la distancia recorrida
  * tras llegar a ese punto desde el anterior y la velocidad en el período
- * entre dos puntos consecutivos.
+ * entre dos puntos consecutivos. También se guarda el instante de tiempo de
+ * captura de la posición, para cálculos temporales.
  *
  * Link del repositorio (GitHub):
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.2 alfa
+ * @version 0.3 alfa
  *
  */
 public class Point {
 
     /* Atributos de la clase: índice para la base de datos, latitud/longitud del punto,
-    y distancia recorrida y velocidad entre un punto y el anterior. */
+    distancia recorrida y velocidad entre un punto y el anterior, e instante de captura. */
     private int id;
     private double latitud;
     private double longitud;
     private double distancia;
     private double velocidad;
+    private long instante;
 
     /**
      * Constructor de la clase Point
@@ -33,13 +35,15 @@ public class Point {
      * @param longitud longitud del punto.
      * @param distancia distancia recorrida entre este punto y el anterior.
      * @param velocidad velocidad dada entre este punto y el anterior.
+     * @param instante instante de tiempo de captura del dato.
      */
-    public Point (int id, double latitud, double longitud, double distancia, double velocidad) {
+    public Point (int id, double latitud, double longitud, double distancia, double velocidad, long instante) {
         this.id = id;
         this.latitud = latitud;
         this.longitud = longitud;
         this.distancia = distancia;
         this.velocidad = velocidad;
+        this.instante = instante;
     }
 
     /**
@@ -140,5 +144,25 @@ public class Point {
      */
     public void setVelocidad(double velocidad) {
         this.velocidad = velocidad;
+    }
+
+    /**
+     * Método: getInstante
+     * Devuelve el instante de captura del punto.
+     *
+     * @return dicho instante.
+     */
+    public long getInstante() {
+        return this.instante;
+    }
+
+    /**
+     * Método: setVelocidad
+     * Fija el instante de captura del dato.
+     *
+     * @param instante dicho instante.
+     */
+    public void setInstante(long instante) {
+        this.instante = instante;
     }
 }

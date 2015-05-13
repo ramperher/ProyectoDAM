@@ -20,5 +20,6 @@
     <string name="titulo_res">ESTADÍSTICAS FINALES</string>
     <string name="dist_rec">Distancia recorrida (m): </string>
     <string name="vel_media">Velocidad media (km/h): </string>
+    <string name="duracion">Duración (s): </string>
 
 </resources>

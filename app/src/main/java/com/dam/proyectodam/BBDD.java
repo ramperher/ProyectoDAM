@@ -19,7 +19,7 @@ import android.util.Log;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.3 alfa
+ * @version 0.4 alfa
  *
  */
 public class BBDD extends SQLiteOpenHelper {
@@ -242,7 +242,7 @@ public class BBDD extends SQLiteOpenHelper {
                     punto antes declarado. */
                     if (indice == 1) {
                         punto = new Point(indice, localizacion.getLatitude(), localizacion.getLongitude(), 0,
-                                localizacion.getSpeed());
+                                localizacion.getSpeed(), localizacion.getTime());
                     }
                     else {
                         /* Si no es el primer punto, necesitamos acceder al punto anterior para conseguir
@@ -256,7 +256,8 @@ public class BBDD extends SQLiteOpenHelper {
 
                         // Y calculamos la distancia con distanceTo
                         punto = new Point(indice, localizacion.getLatitude(), localizacion.getLongitude(),
-                                localizacion.distanceTo(localizacion_ant), localizacion.getSpeed());
+                                localizacion.distanceTo(localizacion_ant), localizacion.getSpeed(),
+                                localizacion.getTime());
 
                         // Por último, volvemos a poner el cursor donde estaba.
                         c.moveToNext();
@@ -301,11 +302,13 @@ public class BBDD extends SQLiteOpenHelper {
                         localizacion_ant.setSpeed(Float.parseFloat(c.getString(3)));
                         localizacion_ant.setTime(Long.parseLong(c.getString(4)));
                         punto = new Point(indice, localizacion.getLatitude(),localizacion.getLongitude(),
-                                localizacion.distanceTo(localizacion_ant),localizacion.getSpeed());
+                                localizacion.distanceTo(localizacion_ant),localizacion.getSpeed(),
+                                localizacion.getTime());
                     }
                     else {
                         // Caso de no sobreescritura: es el primer punto, luego la distancia vale 0.
-                        punto = new Point(indice, localizacion.getLatitude(),localizacion.getLongitude(),0,localizacion.getSpeed());
+                        punto = new Point(indice, localizacion.getLatitude(), localizacion.getLongitude(), 0,
+                                localizacion.getSpeed(), localizacion.getTime());
                     }
                 }
                 else {
@@ -318,7 +321,8 @@ public class BBDD extends SQLiteOpenHelper {
                     localizacion_ant.setTime(Long.parseLong(c.getString(4)));
 
                     punto=new Point(indice, localizacion.getLatitude(),localizacion.getLongitude(),
-                            localizacion.distanceTo(localizacion_ant),localizacion.getSpeed());
+                            localizacion.distanceTo(localizacion_ant),localizacion.getSpeed(),
+                            localizacion.getTime());
                 }
                 // Al final, añadimos el punto a la lista.
                 localizaciones.add(punto);
