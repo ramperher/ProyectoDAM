@@ -78,6 +78,11 @@ public class CalculationActivity extends FragmentActivity {
         Bundle bundle = getIntent().getExtras();
         TIEMPO_ACTUALIZACION = bundle.getInt("t_act");
 
+        // Asociamos los TextView.
+        dist = (TextView) findViewById(R.id.textorelleno1);
+        vel = (TextView) findViewById(R.id.textorelleno2);
+        acel = (TextView) findViewById(R.id.textorelleno3);
+
         // Establecemos el mapa.
         mapa = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapCalc)).getMap();
 
@@ -172,9 +177,6 @@ public class CalculationActivity extends FragmentActivity {
 
                     /* Indicamos los cambios en los TextView (si es el primer punto válido, la distancia
                     vale 0). */
-                    dist = (TextView) findViewById(R.id.textorelleno1);
-                    vel = (TextView) findViewById(R.id.textorelleno2);
-                    acel = (TextView) findViewById(R.id.textorelleno3);
                     vel.setText(Double.toString(location.getSpeed()*3.6));
                     if (!BBDDusada) {
                         // Distancia a 0.
