@@ -98,6 +98,7 @@ public class CalculationActivity extends FragmentActivity {
 
         // También se inicia la base de datos.
         baseDatos=new BBDD(getApplicationContext());
+        baseDatos.borrarPosiciones();   //Se borra todos los puntos que pudiese tener.
 
         // E iniciamos la captura de la localización.
         iniciarGPS();
@@ -203,8 +204,7 @@ public class CalculationActivity extends FragmentActivity {
                         dist.setText("0");
 
                         // Guardamos la posición en la base de datos con distancia 0.
-                        baseDatos.insertarPosicion(sobreescribir, ++puntosGuardados, location.getLatitude(), location.getLongitude(),
-                                0, location.getSpeed()*3.6, location.getTime()/1000);
+                        baseDatos.insertarPosicion(location, 0);
 
                         // Y actualizamos a true, para que no vuelva a entrar aquí.
                         BBDDusada = true;
@@ -215,9 +215,9 @@ public class CalculationActivity extends FragmentActivity {
                         Log.d("Calculation","Distancia: " + Float.toString(location.distanceTo(ultima_localizacion)));
 
                         // Con esto, se guarda la posición en la base de datos.
-                        baseDatos.insertarPosicion(sobreescribir, ++puntosGuardados, location.getLatitude(), location.getLongitude(),
-                                location.distanceTo(ultima_localizacion), location.getSpeed()*3.6, location.getTime()/1000);
+                        baseDatos.insertarPosicion(location, location.distanceTo(ultima_localizacion));
                     }
+                    Log.d("Activity", "Punto mandado a guardar");
 
                     // Comprobamos que no se ha llegado al límite de puntos marcado.
                     if (puntosGuardados == INDICE_MAXIMO) {

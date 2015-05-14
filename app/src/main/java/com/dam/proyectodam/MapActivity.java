@@ -55,13 +55,13 @@ public class MapActivity extends FragmentActivity {
 
         // Obtenemos el número de puntos guardados y si se sobreescribió o no la base de datos.
         Bundle bundle = getIntent().getExtras();
-        puntosGuardados = bundle.getInt("puntosGuardados");
-        sobreescribir = bundle.getBoolean("sobreescribir");
+        //puntosGuardados = bundle.getInt("puntosGuardados");
+       // sobreescribir = bundle.getBoolean("sobreescribir");
 
         /* Se inicia la base de datos y se devuelve el listado de puntos, para construir
         la polilínea. */
         baseDatos=new BBDD(getApplicationContext());
-        construirPolyline(baseDatos.listarPosiciones(puntosGuardados, sobreescribir));
+        construirPolyline(baseDatos.listarPosiciones());
 
         // Y construimos el mapa, si no lo estaba ya.
         setUpMapIfNeeded();

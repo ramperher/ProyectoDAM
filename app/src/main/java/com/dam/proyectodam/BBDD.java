@@ -1,13 +1,14 @@
 package com.dam.proyectodam;
 
-import java.util.ArrayList;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
 import android.util.Log;
+
+import java.util.ArrayList;
 
 /**
  *
@@ -38,11 +39,13 @@ public class BBDD extends SQLiteOpenHelper {
     -Instante de captura de la posición.
     La distancia de cada intervalo se calcula a partir de estos datos. */
     private static final String TABLA_LOCALIZACION="CREATE TABLE IF NOT EXISTS posiciones " +
-            "(_id INTEGER PRIMARY KEY, latitud REAL, longitud REAL, distancia REAL, velocidad REAL, " +
-            "instante INTEGER)";
+            "(_id INTEGER PRIMARY key, latitud text, longitud text, distancia text, velocidad text, " +
+            "instante text)";
 
     // Sentencia SQL para borrar la tabla de posiciones del mapa.
     private static final String DROP_LOCALIZACIONES="DROP TABLE IF EXISTS posiciones";
+
+    private static int id=1;
 
     /**
      * Constructor de la clase BBDD
@@ -84,17 +87,9 @@ public class BBDD extends SQLiteOpenHelper {
      * Método: insertarPosicion
      * Añade una posición en la base de datos, con sus atributos característicos.
      *
-     * @param sobreescribir booleano que indica si se está sobreescribiendo o no la tabla.
-     * @param id identificador de la posición en la tabla.
-     * @param latitud latitud del punto.
-     * @param longitud longitud del punto.
-     * @param distancia distancia entre este punto y el anterior.
-     * @param velocidad velocidad alcanzada en este punto.
-     * @param instante instante de tiempo de captura del punto.
      * @return un booleano que indica si el proceso se ejecutó correctamente o no.
      */
-    public boolean insertarPosicion(boolean sobreescribir, int id, double latitud, double longitud,
-                                    float distancia, double velocidad, long instante) {
+    public boolean insertarPosicion(Location localizacion, float distancia) {
         // Valor de comprobación de operaciones con la base de datos.
         long salida=0;
 
@@ -104,26 +99,23 @@ public class BBDD extends SQLiteOpenHelper {
             // Insertamos los valores.
             ContentValues valores = new ContentValues();
             valores.put("_id", id);
-            valores.put("latitud", latitud);
-            valores.put("longitud", longitud);
-            valores.put("distancia", distancia);
-            valores.put("velocidad", velocidad);
-            valores.put("instante", instante);
 
-            // Comprobamos si estamos sobreescribiendo la BBDD por pasarnos del límite marcado.
-            if (sobreescribir) {
-                // Si se ha reiniciado el puntero de la BBDD, se han de actualizar valores, no introducirlos.
-                salida=db.update("posiciones", valores, "_id=" + id, null);
-                Log.d("BBDD", "Sobreescritura de la BBDD, posición " + id);
+            Log.d("BBDD", String.valueOf(id));
+            Log.d("BBDD", "Nuevo punto: Latitud-> " +String.valueOf(localizacion.getLatitude()) + " Longitud->" + String.valueOf(localizacion.getLongitude())+
+            " Distancia->" + String.valueOf(distancia) + " Velocidad:" +  String.valueOf(localizacion.getSpeed()) + " Tiempo->" + String.valueOf(localizacion.getTime()));
+
+            valores.put("latitud", String.valueOf(localizacion.getLatitude()));
+            valores.put("longitud", String.valueOf(localizacion.getLongitude()));
+            valores.put("distancia", String.valueOf(distancia));
+            valores.put("velocidad", String.valueOf((localizacion.getSpeed()*3.6)));
+            valores.put("instante", String.valueOf((localizacion.getTime()/1000)));
+            id++;
+
+            salida=db.insert("posiciones", null, valores);
+            Log.d("BBDD", "Añadimos un valor a la BBDD, posición " + id);
+            // Cerramos la base de datos y devolvemos el booleano.
+            db.close();
             }
-            else {
-                // En caso de funcionamiento normal, añadimos la posición a la tabla.
-                salida=db.insert("posiciones", null, valores);
-                Log.d("BBDD", "Añadimos un valor a la BBDD, posición " + id);
-            }
-        }
-        // Cerramos la base de datos y devolvemos el booleano.
-        db.close();
         return(salida>0);
     }
 
@@ -167,9 +159,9 @@ public class BBDD extends SQLiteOpenHelper {
             // Vaciamos la tabla.
             salida=db.delete("posiciones", null, null);
             Log.d("BBDD", "Tabla de la BBDD vaciada");
+            // Cerramos la base de datos y devolvemos el booleano.
+            db.close();
         }
-        // Cerramos la base de datos y devolvemos el booleano.
-        db.close();
         return(salida>0);
     }
 
@@ -178,11 +170,9 @@ public class BBDD extends SQLiteOpenHelper {
      * Recupera todos los puntos de la base de datos con formato en base a la
      * clase Point.
      *
-     * @param id última posición en la que se escribió en la base de datos.
-     * @param sobreescribir booleano que indica si se está sobreescribiendo o no la tabla.
      * @return una lista con todos los puntos guardados en la base de datos.
      */
-    public ArrayList<Point> listarPosiciones(int id, boolean sobreescribir) {
+    public ArrayList<Point> listarPosiciones() {
         // Abrimos la base de datos, en modo lectura.
         SQLiteDatabase db = getReadableDatabase();
 
@@ -200,43 +190,20 @@ public class BBDD extends SQLiteOpenHelper {
             // Devolvemos todas las filas.
             Cursor c = db.query("posiciones", valores_recuperar, null, null, null, null, null, null);
 
-            /* Si estamos en sobreescritura, tomamos como primer punto la fila referenciada con el índice
-            id (que es el siguiente a sobreescribir, luego es el primer punto para nosotros). */
-            if (sobreescribir) {
-                /* Nos colocamos en la posición marcada por id (debe ser id-1, porque el primer índice
-                del cursor es el 0, no el 1. */
-                c.moveToPosition(id-1);
+            if(c!=null){
+                c.moveToFirst();
+                do{
+                    localizaciones.add(new Point(indice, Double.valueOf(c.getString(0)), Double.valueOf(c.getString(1)), Float.valueOf(c.getString(2)), Double.valueOf(c.getString(3)), Long.valueOf(c.getString(4))));
+                    Log.d("BBDD", "Punto extraido: Latitud-> " + c.getString(0) + " Longitud->" + c.getString(1) + " Distancia->" + c.getString(2) + " Velocidad->" + c.getString(3) + " Tiempo->" + c.getString(4));
+                    indice++;
+                }while(c.moveToNext());
 
-                // Leemos todas las filas que quedan, hasta el final.
-                do {
-                    Log.d("BBDD", "Punto sobreescrito, posición " + (id+indice-1));
-
-                    // Añadimos el punto directamente, puesto que las estadísticas ya están calculadas.
-                    localizaciones.add(new Point(indice, c.getDouble(1), c.getDouble(2), c.getFloat(3),
-                            c.getDouble(4), c.getLong(5)));
-
-                    // Y actualizamos el índice.
-                    indice += 1;
-                } while (c.moveToNext());
-            }
-
-            /* Aquí, leeremos hasta llegar a la fila id-1, que será la última a leer (última fila de la
-            base de datos en caso de no haber sobreescritura, y último valor sobreescrito en caso contrario). */
-            for (int puntero = 1; puntero < id; puntero++, indice++) {
-                Log.d("BBDD", "Punto no sobreescrito, posición " + puntero);
-
-                // Nos dirigimos a la fila que toque (le restamos 1, porque empieza en 0 el cursor).
-                c.moveToPosition(puntero-1);
-
-                // Y añadimos el punto directamente, ya que tenemos los datos correctos.
-                localizaciones.add(new Point(indice, c.getDouble(1), c.getDouble(2), c.getFloat(3),
-                        c.getDouble(4), c.getLong(5)));
             }
             c.close();
-        }
-        Log.d("BBDD", "Puntos devueltos");
+            Log.d("BBDD", "Puntos devueltos");
 
-        db.close();
+            db.close();
+        }
 
         return localizaciones;
     }

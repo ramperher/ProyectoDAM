@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -54,13 +53,13 @@ public class ResultActivity extends Activity {
 
         // Obtenemos el número de puntos guardados y si se sobreescribió o no la base de datos.
         Bundle bundle = getIntent().getExtras();
-        puntosGuardados = bundle.getInt("puntosGuardados");
-        sobreescribir = bundle.getBoolean("sobreescribir");
+        //puntosGuardados = bundle.getInt("puntosGuardados");
+        //sobreescribir = bundle.getBoolean("sobreescribir");
 
         /* Se inicia la base de datos y se devuelve el listado de puntos, que se
         pasa a mostrarDatos. */
         baseDatos=new BBDD(getApplicationContext());
-        mostrarDatos(baseDatos.listarPosiciones(puntosGuardados, sobreescribir));
+        mostrarDatos(baseDatos.listarPosiciones());
 
         Log.d("Result", "Actividad preparada y datos mostrados");
     }
