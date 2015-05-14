@@ -193,8 +193,10 @@ public class BBDD extends SQLiteOpenHelper {
             // Devolvemos todas las filas.
             Cursor c = db.query("posiciones", valores_recuperar, null, null, null, null, null, null);
 
-            // Y vamos leyendo de principio a fin.
-            if(c!=null){
+            /* Y vamos leyendo de principio a fin. Debemos comprobar si el cursor devuelve filas,
+            porque puede ocurrir que se cree y no devuelva ninguna fila (no se guardó ningún
+            punto). */
+            if (c != null && c.getCount() != 0){
                 c.moveToFirst();
                 do {
                     localizaciones.add(new Point(indice, Double.valueOf(c.getString(0)), Double.valueOf(c.getString(1)), Float.valueOf(c.getString(2)), Double.valueOf(c.getString(3)), Long.valueOf(c.getString(4))));

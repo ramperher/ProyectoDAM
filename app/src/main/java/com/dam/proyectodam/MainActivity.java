@@ -19,6 +19,9 @@ import android.widget.NumberPicker;
  *
  * Clase MainActivity.java. Proyecto ARTrack. Diseño de Aplicaciones Móviles. 4º GITT.
  * Clase principal de servicio, que sirve de punto de partida para la toma de datos del GPS.
+ * Esta actividad tiene en cuenta la orientación del terminal (horizontal o vertical), y
+ * tiene un layout para cada caso. El NumberPicker está adaptado para ambos casos, y no
+ * hace falta dos ficheros layout.
  *
  * Link del repositorio (GitHub):
  *  https://github.com/ramperher/ProyectoDAM
@@ -41,18 +44,22 @@ public class MainActivity extends ActionBarActivity {
     segundos por defecto (está en milisegundos). */
     private int tiempo_actualizacion = 1000*10;
 
-    // Base de datos de la aplicación.
-    private BBDD baseDatos;
-
-     /**
+    /**
      * Método: onCreate
      * Método ejecutado cuando se llama a la actividad.
      *
-     * @param savedInstanceState instancia de la aplicación para recuperar datos.
+     * @param savedInstanceState instancia de la actividad para recuperar datos.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Restauramos el estado de tiempo_actualizacion.
+        if (savedInstanceState != null){
+            tiempo_actualizacion = savedInstanceState.getInt("tiempo_actualizacion");
+
+            Log.d("Main", "Restaurado tiempo de actualización de " + tiempo_actualizacion);
+        }
 
         // Mostramos el layout de la actividad.
         setContentView(R.layout.activity_main);
@@ -78,9 +85,27 @@ public class MainActivity extends ActionBarActivity {
     }
 
     /**
+     * Método: onSaveInstanceState
+     * Método que guarda el atributo de tiempo de actualización, para casos de rotación
+     * del terminal.
+     *
+     * @param state estado a guardar.
+     */
+    @Override
+    protected void onSaveInstanceState(Bundle state) {
+        super.onSaveInstanceState(state);
+
+        // Y guardamos la variable.
+        state.putInt("tiempo_actualizacion", tiempo_actualizacion);
+
+        Log.d("Main", "Guardado tiempo de actualización de " + tiempo_actualizacion);
+    }
+
+    /**
      * Método: onOptionsItemSelected
      * Método que realiza una acción u otra en función de la opción seleccionada
-     * en el menú superior.
+     * en el menú superior. En este caso, sólo actúa con la única opción implementada,
+     * que es la modificación del tiempo de actualización.
      *
      * @param item opción seleccionada del menú.
      * @return true en caso de ir bien, false en caso contrario.
@@ -154,8 +179,8 @@ public class MainActivity extends ActionBarActivity {
 
     /**
      * Método: onBackPressed
-     * Método ejecutado cuando se pulsa el botón atrás del terminal.
-     *
+     * Método ejecutado cuando se pulsa el botón atrás del terminal, preguntando
+     * si desea salir de la aplicación o no, en vez de sacarlo directamente.
      */
     @Override
     public void onBackPressed() {
@@ -187,13 +212,14 @@ public class MainActivity extends ActionBarActivity {
 
     /**
      * Método: comenzarEntrenamiento
-     * Método ejecutado cuando se pulsa el botón de esta actividad.
+     * Método ejecutado cuando se pulsa el botón de esta actividad, para pasar a
+     * la siguiente.
      *
      * @param view vista actual.
      */
     public void comenzarEntrenamiento(View view) {
         /* Comprobamos si está activado el GPS. De no estarlo, no dejaremos acceder a la siguiente
-        actividad, y redirigiremos al usuario al menú del GPS para que lo active. */
+        actividad, y redirigiremos al usuario al menú de ajustes del GPS para que lo active. */
         final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
 
         if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -251,18 +277,20 @@ public class MainActivity extends ActionBarActivity {
 
     /**
      * Método: onActivityResult
-     * Método ejecutado cuando se vuelve a esta actividad.
+     * Método ejecutado cuando se vuelve a esta actividad. Su misión es borrar la base
+     * de datos para empezar un nuevo entrenamiento.
      *
      * @param requestCode código que identifica a la actividad por la que se vuelve.
      * @param resultCode código que indica el resultado final.
      * @param data datos obtenidos como resultado.
      */
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Comprobamos el único caso posible y definido (podría extenderse de meter más opciones)
         if (requestCode == ENTRENAMIENTO) {
             Log.d("Main", "Hemos vuelto de la actividad lanzada");
 
              // Se reinicia la base de datos.
-             baseDatos=new BBDD(getApplicationContext());
+             BBDD baseDatos = new BBDD(getApplicationContext());
              baseDatos.borrarPosiciones();
              Log.d("Main", "Tabla en BBDD borrada al volver de actividad");
         }

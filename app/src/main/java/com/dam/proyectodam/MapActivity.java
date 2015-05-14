@@ -17,6 +17,8 @@ import java.util.ArrayList;
  *
  * Clase MapActivity.java. Proyecto ARTrack. Diseño de Aplicaciones Móviles. 4º GITT.
  * Muestra el recorrido seguido durante el entrenamiento en un mapa.
+ * Aquí no importa girar el terminal, ya que lo único que se hará es reconstruir el mapa
+ * de nuevo.
  *
  * Link del repositorio (GitHub):
  *  https://github.com/ramperher/ProyectoDAM
@@ -29,9 +31,6 @@ public class MapActivity extends FragmentActivity {
     // Mapa en el que mostrar las líneas del recorrido.
     private GoogleMap googleMap;
 
-    // Base de datos de la aplicación.
-    private BBDD baseDatos;
-
     // Polilínea a mostrar en el mapa.
     PolylineOptions polilinea;
 
@@ -42,7 +41,7 @@ public class MapActivity extends FragmentActivity {
      * Método: onCreate
      * Método ejecutado cuando se llama a la actividad.
      *
-     * @param savedInstanceState instancia de la aplicación para recuperar datos.
+     * @param savedInstanceState instancia de la actividad para recuperar datos.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +50,7 @@ public class MapActivity extends FragmentActivity {
 
         /* Se inicia la base de datos y se devuelve el listado de puntos, para construir
         la polilínea. */
-        baseDatos=new BBDD(getApplicationContext());
+        BBDD baseDatos = new BBDD(getApplicationContext());
         construirPolyline(baseDatos.listarPosiciones());
 
         // Y construimos el mapa, si no lo estaba ya.

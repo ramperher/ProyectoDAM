@@ -1,15 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+    <!-- Estilo para la aplicación. Se cambia a Theme.AppCombat.Light. -->
+    <style name="AppTheme"
+        parent="Theme.AppCompat.Light">
     </style>
+
+    <!-- Estilo para dividir la pantalla en dos bloques iguales (vertical). -->
     <style name="mitadPantalla">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:layout_weight">0.5</item>
         <item name="android:orientation">vertical</item>
+    </style>
+
+    <!-- Estilo para dividir la pantalla en dos bloques iguales (horizontal). -->
+    <style name="mitadPantallaHor">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">0.5</item>
+        <item name="android:orientation">horizontal</item>
     </style>
 
 </resources>

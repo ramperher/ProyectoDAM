@@ -31,7 +31,7 @@ public class SplashScreenActivity extends Activity {
      * Método: onCreate
      * Método ejecutado cuando se llama a la actividad.
      *
-     * @param savedInstanceState instancia de la aplicación para recuperar datos.
+     * @param savedInstanceState instancia de la actividad para recuperar datos.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +47,7 @@ public class SplashScreenActivity extends Activity {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
+                Log.d("Splash", "Pasamos a MainActivity");
 
                 // Marcamos el intent con el lanzamiento de la próxima actividad (MainActivity).
                 Intent mainIntent = new Intent(SplashScreenActivity.this, MainActivity.class);
@@ -57,7 +58,7 @@ public class SplashScreenActivity extends Activity {
             }
         };
 
-        // Simulamos el proceso de carga al iniciarse la aplicación.
+        // Programamos el proceso de carga al iniciarse la aplicación.
         Timer timer = new Timer();
         timer.schedule(task, SPLASH_SCREEN_DELAY);
         Log.d("Splash", "Splash programado");
