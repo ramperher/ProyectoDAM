@@ -1,8 +1,6 @@
 package com.dam.proyectodam;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
@@ -25,12 +23,14 @@ import com.google.android.gms.maps.model.MarkerOptions;
  * Clase CalculationActivity.java. Proyecto ARTrack. Diseño de Aplicaciones Móviles. 4º GITT.
  * Clase donde se leen los datos del GPS, se almacenan en la base de datos, y se muestran
  * los resultados del entrenamiento por cada intervalo de tiempo muestreado.
+ * Adaptada con 2 layout distintos para orientación vertical y horizontal, guardando valores
+ * de interés y recuperándolos al crearse de nuevo la actividad.
  *
  * Link del repositorio (GitHub):
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.5 alfa
+ * @version 1.0 final
  *
  */
 public class CalculationActivity extends FragmentActivity {
@@ -48,7 +48,7 @@ public class CalculationActivity extends FragmentActivity {
     private BBDD baseDatos;
 
     // Tiempo de actualización del GPS, que se modifica en onCreate (por eso no es final).
-    private int TIEMPO_ACTUALIZACION = 0;
+    private int tiempo_actualizacion = 0;
 
     // Última localización capturada, para cálculos de estadísticas.
     private Location ultima_localizacion;
@@ -71,6 +71,15 @@ public class CalculationActivity extends FragmentActivity {
     // Booleano para saber si ya hemos añadido algún punto a la base de datos.
     private boolean BBDDusada = false;
 
+    /* Atributos auxiliares de latitud, longitud, distancia, velocidad y estado
+    de aceleración, para mostrarlos en caso de giro de pantalla y otros motivos
+    de nueva creación de la actividad. */
+    private double latitud;
+    private double longitud;
+    private String distancia = "-";
+    private String velocidad = "-";
+    private String est_aceleracion = "-";
+
     /**
      * Método: onCreate
      * Método ejecutado cuando se llama a la actividad.
@@ -86,7 +95,7 @@ public class CalculationActivity extends FragmentActivity {
 
         // Fijamos el tiempo de actualización con el valor pasado por MainActivity.
         Bundle bundle = getIntent().getExtras();
-        TIEMPO_ACTUALIZACION = bundle.getInt("t_act");
+        tiempo_actualizacion = bundle.getInt("t_act");
 
         // Asociamos los TextView.
         dist = (TextView) findViewById(R.id.textorelleno1);
@@ -96,6 +105,31 @@ public class CalculationActivity extends FragmentActivity {
         // Establecemos el mapa.
         mapa = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapCalc)).getMap();
 
+        /* Ponemos los datos guardados en el mapa, los TextView y variables auxiliares.
+        Único problema: se volverá a buscar una localización provisional, a configurar el listener
+        para cambios, y a comenzar un entrenamiento como si empezara de 0, pero con estos
+        datos almacenados. Tenerlo en cuenta. */
+        if (savedInstanceState != null) {
+            // Primero, restauramos los atributos.
+            latitud = savedInstanceState.getDouble("latitud");
+            longitud = savedInstanceState.getDouble("longitud");
+            distancia = savedInstanceState.getString("distancia");
+            velocidad = savedInstanceState.getString("velocidad");
+            est_aceleracion = savedInstanceState.getString("est_aceleracion");
+            tiempo_actualizacion = savedInstanceState.getInt("tiempo_actualizacion");
+            puntosGuardados = savedInstanceState.getInt("puntosGuardados");
+
+            if (puntosGuardados > 0) {
+                // Sólo añadimos el punto si tenemos más de un punto guardado.
+                mapa.clear();
+                mapa.addMarker(new MarkerOptions().position(new LatLng(latitud, longitud)).title("Posición actual"));
+            }
+
+            dist.setText(distancia);
+            vel.setText(velocidad);
+            acel.setText(est_aceleracion);
+        }
+
         // También se inicia la base de datos.
         baseDatos=new BBDD(getApplicationContext());
         baseDatos.borrarPosiciones();   //Se borra todos los puntos que pudiese tener.
@@ -104,6 +138,32 @@ public class CalculationActivity extends FragmentActivity {
         iniciarGPS();
 
         Log.d("Calculation", "Actividad preparada");
+    }
+
+    /**
+     * Método: onSaveInstanceState
+     * Método que guarda los datos del último punto capturado, para mostrarlo por
+     * pantalla en caso de que se vuelva a iniciar la actividad (por giro de pantalla,
+     * por ejemplo).
+     *
+     * @param state estado a guardar.
+     */
+    @Override
+    protected void onSaveInstanceState(Bundle state) {
+        super.onSaveInstanceState(state);
+
+        // Y guardamos los datos.
+        state.putDouble("latitud", latitud);
+        state.putDouble("latitud", longitud);
+        state.putString("distancia", distancia);
+        state.putString("velocidad", velocidad);
+        state.putString("est_aceleracion", est_aceleracion);
+
+        // Datos extra, aparte de la localización.
+        state.putInt("tiempo_actualizacion", tiempo_actualizacion);
+        state.putInt("puntosGuardados", puntosGuardados);
+
+        Log.d("Main", "Guardados los valores de la última localización");
     }
 
     /**
@@ -182,7 +242,9 @@ public class CalculationActivity extends FragmentActivity {
                     }
 
                     // Obtenemos latitud y longitud, pasando a LatLng.
-                    LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                    latitud = location.getLatitude();
+                    longitud = location.getLongitude();
+                    LatLng latLng = new LatLng(latitud, longitud);
 
                     // Añadimos un marcador, limpiando el que pusimos antes.
                     mapa.clear();
@@ -194,22 +256,26 @@ public class CalculationActivity extends FragmentActivity {
                     mapa.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
 
                     // Indicamos los cambios en los TextView, primero con la velocidad.
-                    vel.setText(Double.toString(location.getSpeed()*3.6));
+                    velocidad = Double.toString(location.getSpeed()*3.6);
+                    vel.setText(velocidad);
 
                     /* El estado de la aceleración puede ser acelerando, decelerando o velocidad constante,
                     dependiendo del resultado de la aceleración (que es vf-vo/tf-to). Aquí obviaremos el
                     tiempo, y nos limitaremos a la diferencia de velocidades (ya que tf-to siempre será >=0). */
                     if ((location.getSpeed() - ultima_localizacion.getSpeed()) > 0)
-                        acel.setText("Acelerando");
+                        est_aceleracion ="Acelerando";
                     else if ((location.getSpeed() - ultima_localizacion.getSpeed()) < 0)
-                        acel.setText("Decelerando");
+                        est_aceleracion = "Decelerando";
                     else
-                        acel.setText("Velocidad constante");
+                        est_aceleracion = "Velocidad constante";
+
+                    acel.setText(est_aceleracion);
 
                     // La posición depende de si es el primer punto tomado o no.
                     if (!BBDDusada) {
                         // Distancia a 0.
-                        dist.setText("0");
+                        distancia = "0";
+                        dist.setText(distancia);
 
                         // Guardamos la posición en la base de datos con distancia 0.
                         baseDatos.insertarPosicion(location, 0);
@@ -219,12 +285,13 @@ public class CalculationActivity extends FragmentActivity {
                     }
                     else {
                         // Fijamos la distancia a su valor normal.
-                        dist.setText(Float.toString(location.distanceTo(ultima_localizacion)));
-                        Log.d("Calculation","Distancia: " + Float.toString(location.distanceTo(ultima_localizacion)));
+                        distancia = Float.toString(location.distanceTo(ultima_localizacion));
 
                         // Con esto, se guarda la posición en la base de datos.
                         baseDatos.insertarPosicion(location, location.distanceTo(ultima_localizacion));
                     }
+                    dist.setText(distancia);
+
                     Log.d("Activity", "Punto mandado a guardar");
 
                     /* Aumentamos el número de puntos y comprobamos que no se ha llegado al límite
@@ -257,8 +324,8 @@ public class CalculationActivity extends FragmentActivity {
             }
         };
         /* Actualizamos la posición usando GPS (que llamaría a onLocationChanged). Se actualiza sólo
-        con el tiempo (TIEMPO_ACTUALIZACION), no actuando la distancia. */
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, TIEMPO_ACTUALIZACION,
+        con el tiempo (tiempo_actualizacion), no actuando la distancia. */
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, tiempo_actualizacion,
                 DISTANCIA_ACTUALIZACION, locationListener);
     }
 
@@ -278,8 +345,8 @@ public class CalculationActivity extends FragmentActivity {
 
         // Comprueba si la nueva localización es nueva o vieja.
         long timeDelta = location.getTime() - currentBestLocation.getTime();
-        boolean isSignificantlyNewer = timeDelta > TIEMPO_ACTUALIZACION;
-        boolean isSignificantlyOlder = timeDelta < -TIEMPO_ACTUALIZACION;
+        boolean isSignificantlyNewer = timeDelta > tiempo_actualizacion;
+        boolean isSignificantlyOlder = timeDelta < -tiempo_actualizacion;
         boolean isNewer = timeDelta > 0;
 
         /* Si han pasado más de 2 minutos desde la posición actual, se usa la nueva localización

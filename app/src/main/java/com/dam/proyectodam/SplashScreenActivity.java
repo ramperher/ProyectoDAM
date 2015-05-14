@@ -19,7 +19,7 @@ import android.view.Window;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.2 alfa
+ * @version 1.0 final
  *
  */
 public class SplashScreenActivity extends Activity {

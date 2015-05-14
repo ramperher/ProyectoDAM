@@ -24,7 +24,7 @@ import java.util.ArrayList;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.3 alfa
+ * @version 1.0 final
  *
  */
 public class MapActivity extends FragmentActivity {

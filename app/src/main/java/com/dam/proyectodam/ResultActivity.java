@@ -14,12 +14,14 @@ import java.util.ArrayList;
  * Clase ResultActivity.java. Proyecto ARTrack. Diseño de Aplicaciones Móviles. 4º GITT.
  * Muestra los resultados finales del entrenamiento, y da la opción de volver a MainActivity
  * para un nuevo entrenamiento o mostrar el recorrido en un mapa.
+ * Sólo cuenta con un layout para orientación horizontal y vertical, y no salva
+ * ningún valor (se recalculan de nuevo al crearse de nuevo la actividad).
  *
  * Link del repositorio (GitHub):
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.4 alfa
+ * @version 1.0 final
  *
  */
 public class ResultActivity extends Activity {
@@ -28,9 +30,6 @@ public class ResultActivity extends Activity {
     private TextView dist_rec;
     private TextView vel_media;
     private TextView duracion;
-
-    // Base de datos de la aplicación.
-    private BBDD baseDatos;
 
     /**
      * Método: onCreate
@@ -49,7 +48,7 @@ public class ResultActivity extends Activity {
 
         /* Se inicia la base de datos y se devuelve el listado de puntos, que se
         pasa a mostrarDatos. */
-        baseDatos=new BBDD(getApplicationContext());
+        BBDD baseDatos = new BBDD(getApplicationContext());
         mostrarDatos(baseDatos.listarPosiciones());
 
         Log.d("Result", "Actividad preparada y datos mostrados");

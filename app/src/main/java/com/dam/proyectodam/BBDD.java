@@ -20,7 +20,7 @@ import java.util.ArrayList;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.5 alfa
+ * @version 1.0 final
  *
  */
 public class BBDD extends SQLiteOpenHelper {
@@ -125,6 +125,8 @@ public class BBDD extends SQLiteOpenHelper {
     /**
      * Método: borrarPosicion
      * Borra la posición con el id que indiquemos como parámetro de entrada.
+     * Da warning porque no se usa el método (se implementa por si es necesario en
+     * próximas versiones).
      *
      * @param id identificador de la posición en la tabla.
      * @return un booleano que indica si el proceso se ejecutó correctamente o no.
@@ -139,9 +141,12 @@ public class BBDD extends SQLiteOpenHelper {
             // Borramos la entrada de la tabla.
             salida=db.delete("posiciones", "_id=" + id, null);
             Log.d("BBDD", "Borramos un valor de la BBDD, posición " + id);
+
+            // Cerramos la base de datos.
+            db.close();
         }
-        // Cerramos la base de datos y devolvemos el booleano.
-        db.close();
+
+        // Y devolvemos el booleano.
         return(salida>0);
     }
 
@@ -180,7 +185,7 @@ public class BBDD extends SQLiteOpenHelper {
         SQLiteDatabase db = getReadableDatabase();
 
         // Se crea la lista de objetos Point donde se guardarán los datos de la BBDD.
-        ArrayList<Point> localizaciones = new ArrayList<Point>();
+        ArrayList<Point> localizaciones = new ArrayList<>();
 
         // Valores a recuperar de la base de datos.
         String[] valores_recuperar = {"latitud", "longitud", "distancia", "velocidad", "instante"};
@@ -196,7 +201,7 @@ public class BBDD extends SQLiteOpenHelper {
             /* Y vamos leyendo de principio a fin. Debemos comprobar si el cursor devuelve filas,
             porque puede ocurrir que se cree y no devuelva ninguna fila (no se guardó ningún
             punto). */
-            if (c != null && c.getCount() != 0){
+            if (c != null && c.getCount() != 0) {
                 c.moveToFirst();
                 do {
                     localizaciones.add(new Point(indice, Double.valueOf(c.getString(0)), Double.valueOf(c.getString(1)), Float.valueOf(c.getString(2)), Double.valueOf(c.getString(3)), Long.valueOf(c.getString(4))));
@@ -204,8 +209,9 @@ public class BBDD extends SQLiteOpenHelper {
                     indice++;
                 } while(c.moveToNext());
 
+                c.close();
             }
-            c.close();
+
             Log.d("BBDD", "Puntos devueltos");
 
             db.close();

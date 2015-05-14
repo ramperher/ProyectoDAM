@@ -12,7 +12,7 @@
     tools:context="com.dam.proyectodam.CalculationActivity">
 
     <LinearLayout
-        style="@style/mitadPantalla">
+        style="@style/mitadPantallaHor">
             <fragment android:id="@+id/mapCalc"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -20,7 +20,7 @@
     </LinearLayout>
 
     <RelativeLayout
-        style="@style/mitadPantalla">
+        style="@style/mitadPantallaHor">
         <TextView android:text="@string/titulo_calc"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

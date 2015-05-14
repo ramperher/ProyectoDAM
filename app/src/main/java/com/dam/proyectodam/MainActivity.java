@@ -20,14 +20,14 @@ import android.widget.NumberPicker;
  * Clase MainActivity.java. Proyecto ARTrack. Diseño de Aplicaciones Móviles. 4º GITT.
  * Clase principal de servicio, que sirve de punto de partida para la toma de datos del GPS.
  * Esta actividad tiene en cuenta la orientación del terminal (horizontal o vertical), y
- * tiene un layout para cada caso. El NumberPicker está adaptado para ambos casos, y no
- * hace falta dos ficheros layout.
+ * tiene un layout para cada caso, guardando valores de interés y recuperándolos al volver.
+ * El NumberPicker está adaptado para ambos casos, y no hace falta dos ficheros layout.
  *
  * Link del repositorio (GitHub):
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.5 alfa
+ * @version 1.0 final
  *
  */
 public class MainActivity extends ActionBarActivity {

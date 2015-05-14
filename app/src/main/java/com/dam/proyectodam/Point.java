@@ -8,12 +8,14 @@ package com.dam.proyectodam;
  * tras llegar a ese punto desde el anterior y la velocidad en el período
  * entre dos puntos consecutivos. También se guarda el instante de tiempo de
  * captura de la posición, para cálculos temporales.
+ * Se implementan todos los métodos get y set, por si fuesen necesarios (de ahí
+ * los warning, porque hay métodos que no se usan).
  *
  * Link del repositorio (GitHub):
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.3 alfa
+ * @version 1.0 final
  *
  */
 public class Point {
