@@ -20,7 +20,7 @@ import java.util.ArrayList;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.4 alfa
+ * @version 0.5 alfa
  *
  */
 public class BBDD extends SQLiteOpenHelper {
@@ -45,7 +45,8 @@ public class BBDD extends SQLiteOpenHelper {
     // Sentencia SQL para borrar la tabla de posiciones del mapa.
     private static final String DROP_LOCALIZACIONES="DROP TABLE IF EXISTS posiciones";
 
-    private static int id=1;
+    // Identificador para ir guardando los puntos en orden.
+    private static int id = 1;
 
     /**
      * Constructor de la clase BBDD
@@ -87,6 +88,8 @@ public class BBDD extends SQLiteOpenHelper {
      * Método: insertarPosicion
      * Añade una posición en la base de datos, con sus atributos característicos.
      *
+     * @param localizacion location con la información del punto capturado.
+     * @param distancia distancia al punto anterior.
      * @return un booleano que indica si el proceso se ejecutó correctamente o no.
      */
     public boolean insertarPosicion(Location localizacion, float distancia) {
@@ -190,13 +193,14 @@ public class BBDD extends SQLiteOpenHelper {
             // Devolvemos todas las filas.
             Cursor c = db.query("posiciones", valores_recuperar, null, null, null, null, null, null);
 
+            // Y vamos leyendo de principio a fin.
             if(c!=null){
                 c.moveToFirst();
-                do{
+                do {
                     localizaciones.add(new Point(indice, Double.valueOf(c.getString(0)), Double.valueOf(c.getString(1)), Float.valueOf(c.getString(2)), Double.valueOf(c.getString(3)), Long.valueOf(c.getString(4))));
                     Log.d("BBDD", "Punto extraido: Latitud-> " + c.getString(0) + " Longitud->" + c.getString(1) + " Distancia->" + c.getString(2) + " Velocidad->" + c.getString(3) + " Tiempo->" + c.getString(4));
                     indice++;
-                }while(c.moveToNext());
+                } while(c.moveToNext());
 
             }
             c.close();

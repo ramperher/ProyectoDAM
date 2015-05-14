@@ -22,7 +22,7 @@ import java.util.ArrayList;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.2 alfa
+ * @version 0.3 alfa
  *
  */
 public class MapActivity extends FragmentActivity {
@@ -31,10 +31,6 @@ public class MapActivity extends FragmentActivity {
 
     // Base de datos de la aplicación.
     private BBDD baseDatos;
-
-    // Datos de interés de la base de datos recuperados de CalculationActivity.
-    private int puntosGuardados;
-    private boolean sobreescribir;
 
     // Polilínea a mostrar en el mapa.
     PolylineOptions polilinea;
@@ -52,11 +48,6 @@ public class MapActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
-
-        // Obtenemos el número de puntos guardados y si se sobreescribió o no la base de datos.
-        Bundle bundle = getIntent().getExtras();
-        //puntosGuardados = bundle.getInt("puntosGuardados");
-       // sobreescribir = bundle.getBoolean("sobreescribir");
 
         /* Se inicia la base de datos y se devuelve el listado de puntos, para construir
         la polilínea. */

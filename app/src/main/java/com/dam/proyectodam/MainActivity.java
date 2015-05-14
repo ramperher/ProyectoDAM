@@ -24,7 +24,7 @@ import android.widget.NumberPicker;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.4 alfa
+ * @version 0.5 alfa
  *
  */
 public class MainActivity extends ActionBarActivity {
@@ -37,9 +37,9 @@ public class MainActivity extends ActionBarActivity {
     private final static int MIN_T_ACT = 1;
     private final static int MAX_T_ACT = 60;
 
-    /* Tiempo de actualización del GPS, que puede ser modificado por el usuario. Será de 20
+    /* Tiempo de actualización del GPS, que puede ser modificado por el usuario. Será de 10
     segundos por defecto (está en milisegundos). */
-    private int tiempo_actualizacion = 1000*20;
+    private int tiempo_actualizacion = 1000*10;
 
     // Base de datos de la aplicación.
     private BBDD baseDatos;

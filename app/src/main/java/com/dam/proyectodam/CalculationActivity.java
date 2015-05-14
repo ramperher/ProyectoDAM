@@ -1,6 +1,8 @@
 package com.dam.proyectodam;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
@@ -28,7 +30,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.4 alfa
+ * @version 0.5 alfa
  *
  */
 public class CalculationActivity extends FragmentActivity {
@@ -38,11 +40,9 @@ public class CalculationActivity extends FragmentActivity {
     private static final int DISTANCIA_ACTUALIZACION = 0;
 
     /* Número de puntos con los que trabajará la aplicación como máximo (poniéndole un
-    límite a la base de datos). */
-    private static final int INDICE_MAXIMO = 100;
-
-    // Indica que se ha superado el número de puntos máximos en la base de datos.
-    private boolean sobreescribir = false;
+    límite a la base de datos). El número equivale al número de segundos que hay en
+    un año (luego, si actualizamos cada segundo, el entrenamiento duraría un año). */
+    private static final int LIMITE_BBDD = 31536000;
 
     // Base de datos de la aplicación.
     private BBDD baseDatos;
@@ -132,16 +132,18 @@ public class CalculationActivity extends FragmentActivity {
         // Desactivamos la actualización de la localización.
         locationManager.removeUpdates(locationListener);
 
+        // Lanzo un toast en caso de habernos pasado del límite de la BBDD (view será null).
+        if (view == null) {
+            Toast.makeText(getApplicationContext(),
+                    "¿Cansado? Ha llegado al límite de la base de datos. Contacte con nosotros para " +
+                            "recoger su medalla...", Toast.LENGTH_LONG).show();
+        }
+
         Log.d("Calculation", "Paramos actualización de localización");
         Log.d("Calculation", "Pasamos a ResultActivity");
 
         // Marcamos el intent con el lanzamiento de la próxima actividad (ResultActivity).
         Intent resultIntent = new Intent(CalculationActivity.this, ResultActivity.class);
-
-        // Añadimos el número de puntos leídos y sobreescribir para pasarlo a ResultActivity.
-        resultIntent.putExtra("puntosGuardados", puntosGuardados);
-        resultIntent.putExtra("sobreescribir", sobreescribir);
-
         startActivity(resultIntent);
 
         // Y cerramos la actividad para no volver a ella al pulsar atrás.
@@ -172,6 +174,12 @@ public class CalculationActivity extends FragmentActivity {
 
                 if(isBetterLocation(location, ultima_localizacion)) {
                     Log.d("Calculation", "Cambio significativo en la localización");
+
+                    // Si es el primer punto, mostramos un Toast diciendo que empieza el entrenamiento.
+                    if (puntosGuardados == 0) {
+                        Toast.makeText(getApplicationContext(),
+                                "Comienza el entrenamiento.", Toast.LENGTH_LONG).show();
+                    }
 
                     // Obtenemos latitud y longitud, pasando a LatLng.
                     LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
@@ -219,11 +227,12 @@ public class CalculationActivity extends FragmentActivity {
                     }
                     Log.d("Activity", "Punto mandado a guardar");
 
-                    // Comprobamos que no se ha llegado al límite de puntos marcado.
-                    if (puntosGuardados == INDICE_MAXIMO) {
-                        // Ponemos de nuevo a 0 los puntos guardados, y ponemos sobreescribir a true.
-                        puntosGuardados = 0;
-                        sobreescribir = true;
+                    /* Aumentamos el número de puntos y comprobamos que no se ha llegado al límite
+                    de puntos marcado. */
+                    puntosGuardados++;
+                    if (puntosGuardados == LIMITE_BBDD) {
+                        // Hemos llegado al límite: debemos acabar el entrenamiento.
+                        finalizarEntrenamiento(null);
                     }
 
                     // Y actualizamos la última posición capturada.

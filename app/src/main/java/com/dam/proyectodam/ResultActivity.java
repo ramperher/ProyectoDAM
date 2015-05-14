@@ -19,7 +19,7 @@ import java.util.ArrayList;
  *  https://github.com/ramperher/ProyectoDAM
  *
  * @author Ramón Pérez, Alberto Rodríguez
- * @version 0.3 alfa
+ * @version 0.4 alfa
  *
  */
 public class ResultActivity extends Activity {
@@ -31,10 +31,6 @@ public class ResultActivity extends Activity {
 
     // Base de datos de la aplicación.
     private BBDD baseDatos;
-
-    // Datos de interés de la base de datos recuperados de CalculationActivity.
-    private int puntosGuardados;
-    private boolean sobreescribir;
 
     /**
      * Método: onCreate
@@ -50,11 +46,6 @@ public class ResultActivity extends Activity {
         dist_rec = (TextView) findViewById(R.id.textorelleno4);
         vel_media = (TextView) findViewById(R.id.textorelleno5);
         duracion = (TextView) findViewById(R.id.textorelleno6);
-
-        // Obtenemos el número de puntos guardados y si se sobreescribió o no la base de datos.
-        Bundle bundle = getIntent().getExtras();
-        //puntosGuardados = bundle.getInt("puntosGuardados");
-        //sobreescribir = bundle.getBoolean("sobreescribir");
 
         /* Se inicia la base de datos y se devuelve el listado de puntos, que se
         pasa a mostrarDatos. */
@@ -116,10 +107,6 @@ public class ResultActivity extends Activity {
 
         // Marcamos el intent con el lanzamiento de la próxima actividad (MapActivity).
         Intent mapIntent = new Intent(ResultActivity.this, MapActivity.class);
-
-        // Añadimos el número de puntos leídos y sobreescribir para pasarlo a ResultActivity.
-        mapIntent.putExtra("puntosGuardados", puntosGuardados);
-        mapIntent.putExtra("sobreescribir", sobreescribir);
 
         startActivity(mapIntent);
     }
