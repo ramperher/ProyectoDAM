@@ -2,6 +2,7 @@ package com.dam.proyectodam;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -107,8 +108,8 @@ public class CalculationActivity extends FragmentActivity {
 
         /* Ponemos los datos guardados en el mapa, los TextView y variables auxiliares.
         Único problema: se volverá a buscar una localización provisional, a configurar el listener
-        para cambios, y a comenzar un entrenamiento como si empezara de 0, pero con estos
-        datos almacenados. Tenerlo en cuenta. */
+        para cambios, y a comenzar un entrenamiento con el primer punto con distancia 0, pero tendrá
+        el resto de datos en la base de datos, y se mostrarán estos atributos. Tenerlo en cuenta. */
         if (savedInstanceState != null) {
             // Primero, restauramos los atributos.
             latitud = savedInstanceState.getDouble("latitud");
@@ -128,11 +129,18 @@ public class CalculationActivity extends FragmentActivity {
             dist.setText(distancia);
             vel.setText(velocidad);
             acel.setText(est_aceleracion);
+
+            Log.d("Calculation", "Atributos recuperados");
         }
 
         // También se inicia la base de datos.
         baseDatos=new BBDD(getApplicationContext());
-        baseDatos.borrarPosiciones();   //Se borra todos los puntos que pudiese tener.
+
+        // Sólo borramos si entramos por primera vez.
+        if (savedInstanceState == null) {
+            baseDatos.borrarPosiciones();
+            Log.d("Calculation", "Puntos borrados de la base de datos");
+        }
 
         // E iniciamos la captura de la localización.
         iniciarGPS();
@@ -154,7 +162,7 @@ public class CalculationActivity extends FragmentActivity {
 
         // Y guardamos los datos.
         state.putDouble("latitud", latitud);
-        state.putDouble("latitud", longitud);
+        state.putDouble("longitud", longitud);
         state.putString("distancia", distancia);
         state.putString("velocidad", velocidad);
         state.putString("est_aceleracion", est_aceleracion);
@@ -164,6 +172,25 @@ public class CalculationActivity extends FragmentActivity {
         state.putInt("puntosGuardados", puntosGuardados);
 
         Log.d("Main", "Guardados los valores de la última localización");
+    }
+
+    /**
+     * Método: onDestroy
+     * Método llamado antes de destruirse la actividad. Lo usamos para desactivar
+     * la actualización de la localización, ya que puede ocurrir que pasemos a
+     * ResultActivity, o que cambie la orientación o se reinicie la actividad. Si
+     * no desactivamos la localización, el listener seguirá activo, y seguirá
+     * guardando puntos. De esta forma, en caso de destrucción de la actividad,
+     * desactivamos el listener, y que se vuelva a programar en caso de volver
+     * a crearse la actividad.
+     */
+    @Override
+    protected void onDestroy() {
+        // Desactivamos la actualización de la localización.
+        locationManager.removeUpdates(locationListener);
+        Log.d("Calculation", "La actividad muere");
+
+        super.onDestroy();
     }
 
     /**
@@ -189,9 +216,6 @@ public class CalculationActivity extends FragmentActivity {
      * @param view vista actual.
      */
     public void finalizarEntrenamiento(View view) {
-        // Desactivamos la actualización de la localización.
-        locationManager.removeUpdates(locationListener);
-
         // Lanzo un toast en caso de habernos pasado del límite de la BBDD (view será null).
         if (view == null) {
             Toast.makeText(getApplicationContext(),
@@ -227,83 +251,93 @@ public class CalculationActivity extends FragmentActivity {
             // Sólo actuaremos cuando cambie la posición.
             @Override
             public void onLocationChanged(Location location) {
+                // Sólo trataremos con localizaciones no nulas.
+                if (location != null) {
                 /* Registraremos el cambio actualizando la posición en el mapa y guardándola en la
                 base de datos, sólo si merece la pena actualizar la posición. Si no, se ignora y
                 se espera a la siguiente. */
-                Log.d("Calculation","Cambio en la localización");
+                    Log.d("Calculation", "Cambio en la localización");
 
-                if(isBetterLocation(location, ultima_localizacion)) {
-                    Log.d("Calculation", "Cambio significativo en la localización");
+                    if (isBetterLocation(location, ultima_localizacion)) {
+                        Log.d("Calculation", "Cambio significativo en la localización");
 
-                    // Si es el primer punto, mostramos un Toast diciendo que empieza el entrenamiento.
-                    if (puntosGuardados == 0) {
-                        Toast.makeText(getApplicationContext(),
-                                "Comienza el entrenamiento.", Toast.LENGTH_LONG).show();
-                    }
+                        // Si es el primer punto, mostramos un Toast diciendo que empieza el entrenamiento.
+                        if (puntosGuardados == 0) {
+                            Toast.makeText(getApplicationContext(),
+                                    "Comienza el entrenamiento.", Toast.LENGTH_LONG).show();
+                        }
 
-                    // Obtenemos latitud y longitud, pasando a LatLng.
-                    latitud = location.getLatitude();
-                    longitud = location.getLongitude();
-                    LatLng latLng = new LatLng(latitud, longitud);
+                        // Obtenemos latitud y longitud, pasando a LatLng.
+                        latitud = location.getLatitude();
+                        longitud = location.getLongitude();
+                        LatLng latLng = new LatLng(latitud, longitud);
 
-                    // Añadimos un marcador, limpiando el que pusimos antes.
-                    mapa.clear();
-                    mapa.addMarker(new MarkerOptions().position(latLng).title("Posición actual"));
+                        // Añadimos un marcador, limpiando el que pusimos antes.
+                        mapa.clear();
+                        mapa.addMarker(new MarkerOptions().position(latLng).title("Posición actual"));
 
-                    // Y fijamos el centro del mapa, añadiendo animaciones.
-                    mapa.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,15));
-                    mapa.animateCamera(CameraUpdateFactory.zoomIn());
-                    mapa.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
+                        // Y fijamos el centro del mapa, añadiendo animaciones.
+                        mapa.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15));
+                        mapa.animateCamera(CameraUpdateFactory.zoomIn());
+                        mapa.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
 
-                    // Indicamos los cambios en los TextView, primero con la velocidad.
-                    velocidad = Double.toString(location.getSpeed()*3.6);
-                    vel.setText(velocidad);
+                        // Indicamos los cambios en los TextView, primero con la velocidad.
+                        velocidad = Double.toString(location.getSpeed() * 3.6);
+                        vel.setText(velocidad);
 
                     /* El estado de la aceleración puede ser acelerando, decelerando o velocidad constante,
                     dependiendo del resultado de la aceleración (que es vf-vo/tf-to). Aquí obviaremos el
                     tiempo, y nos limitaremos a la diferencia de velocidades (ya que tf-to siempre será >=0). */
-                    if ((location.getSpeed() - ultima_localizacion.getSpeed()) > 0)
-                        est_aceleracion ="Acelerando";
-                    else if ((location.getSpeed() - ultima_localizacion.getSpeed()) < 0)
-                        est_aceleracion = "Decelerando";
-                    else
-                        est_aceleracion = "Velocidad constante";
+                        if ((location.getSpeed() - ultima_localizacion.getSpeed()) > 0)
+                            est_aceleracion = "Acelerando";
+                        else if ((location.getSpeed() - ultima_localizacion.getSpeed()) < 0)
+                            est_aceleracion = "Decelerando";
+                        else
+                            est_aceleracion = "Velocidad constante";
 
-                    acel.setText(est_aceleracion);
+                        acel.setText(est_aceleracion);
 
-                    // La posición depende de si es el primer punto tomado o no.
-                    if (!BBDDusada) {
-                        // Distancia a 0.
-                        distancia = "0";
+                        /* La posición depende de si es el primer punto tomado o no.
+                        Cuidado, porque puede ocurrir que se gire el terminal y se vuelva a entrar
+                        aquí, registrando distancia 0 (cuando puede que no sea así). No se va a
+                        guardar el atributo BBDDusada en caso de cambios, porque la distancia
+                        se compararía con la última posición conocida (que se hace fuera del listener),
+                        y no con la última posición con cambios significativos. Por eso, acumulamos
+                        0 en la distancia. El error será menor conforme menos tarde el GPS en volver a
+                        capturar posiciones correctas tras destruirse y crearse de nuevo la
+                        actividad, y también conforme más puntos se capturen. */
+                        if (!BBDDusada) {
+                            // Distancia a 0.
+                            distancia = "0";
+                            dist.setText(distancia);
+
+                            // Guardamos la posición en la base de datos con distancia 0.
+                            baseDatos.insertarPosicion(location, 0);
+
+                            // Y actualizamos a true, para que no vuelva a entrar aquí.
+                            BBDDusada = true;
+                        } else {
+                            // Fijamos la distancia a su valor normal.
+                            distancia = Float.toString(location.distanceTo(ultima_localizacion));
+
+                            // Con esto, se guarda la posición en la base de datos.
+                            baseDatos.insertarPosicion(location, location.distanceTo(ultima_localizacion));
+                        }
                         dist.setText(distancia);
 
-                        // Guardamos la posición en la base de datos con distancia 0.
-                        baseDatos.insertarPosicion(location, 0);
-
-                        // Y actualizamos a true, para que no vuelva a entrar aquí.
-                        BBDDusada = true;
-                    }
-                    else {
-                        // Fijamos la distancia a su valor normal.
-                        distancia = Float.toString(location.distanceTo(ultima_localizacion));
-
-                        // Con esto, se guarda la posición en la base de datos.
-                        baseDatos.insertarPosicion(location, location.distanceTo(ultima_localizacion));
-                    }
-                    dist.setText(distancia);
-
-                    Log.d("Activity", "Punto mandado a guardar");
+                        Log.d("Activity", "Punto mandado a guardar");
 
                     /* Aumentamos el número de puntos y comprobamos que no se ha llegado al límite
                     de puntos marcado. */
-                    puntosGuardados++;
-                    if (puntosGuardados == LIMITE_BBDD) {
-                        // Hemos llegado al límite: debemos acabar el entrenamiento.
-                        finalizarEntrenamiento(null);
-                    }
+                        puntosGuardados++;
+                        if (puntosGuardados == LIMITE_BBDD) {
+                            // Hemos llegado al límite: debemos acabar el entrenamiento.
+                            finalizarEntrenamiento(null);
+                        }
 
-                    // Y actualizamos la última posición capturada.
-                    ultima_localizacion = location;
+                        // Y actualizamos la última posición capturada.
+                        ultima_localizacion = location;
+                    }
                 }
             }
 

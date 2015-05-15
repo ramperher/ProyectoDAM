@@ -112,10 +112,11 @@ public class BBDD extends SQLiteOpenHelper {
             valores.put("distancia", String.valueOf(distancia));
             valores.put("velocidad", String.valueOf((localizacion.getSpeed()*3.6)));
             valores.put("instante", String.valueOf((localizacion.getTime()/1000)));
-            id++;
 
             salida=db.insert("posiciones", null, valores);
             Log.d("BBDD", "Añadimos un valor a la BBDD, posición " + id);
+
+            id++;
             // Cerramos la base de datos y devolvemos el booleano.
             db.close();
             }
