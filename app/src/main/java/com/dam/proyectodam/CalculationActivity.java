@@ -2,7 +2,6 @@ package com.dam.proyectodam;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -285,18 +284,6 @@ public class CalculationActivity extends FragmentActivity {
                         velocidad = Double.toString(location.getSpeed() * 3.6);
                         vel.setText(velocidad);
 
-                    /* El estado de la aceleración puede ser acelerando, decelerando o velocidad constante,
-                    dependiendo del resultado de la aceleración (que es vf-vo/tf-to). Aquí obviaremos el
-                    tiempo, y nos limitaremos a la diferencia de velocidades (ya que tf-to siempre será >=0). */
-                        if ((location.getSpeed() - ultima_localizacion.getSpeed()) > 0)
-                            est_aceleracion = "Acelerando";
-                        else if ((location.getSpeed() - ultima_localizacion.getSpeed()) < 0)
-                            est_aceleracion = "Decelerando";
-                        else
-                            est_aceleracion = "Velocidad constante";
-
-                        acel.setText(est_aceleracion);
-
                         /* La posición depende de si es el primer punto tomado o no.
                         Cuidado, porque puede ocurrir que se gire el terminal y se vuelva a entrar
                         aquí, registrando distancia 0 (cuando puede que no sea así). No se va a
@@ -309,7 +296,9 @@ public class CalculationActivity extends FragmentActivity {
                         if (!BBDDusada) {
                             // Distancia a 0.
                             distancia = "0";
-                            dist.setText(distancia);
+
+                            // Aceleración no calculada porque nos falta ultima_localizacion.
+                            est_aceleracion = "Sin datos";
 
                             // Guardamos la posición en la base de datos con distancia 0.
                             baseDatos.insertarPosicion(location, 0);
@@ -322,13 +311,27 @@ public class CalculationActivity extends FragmentActivity {
 
                             // Con esto, se guarda la posición en la base de datos.
                             baseDatos.insertarPosicion(location, location.distanceTo(ultima_localizacion));
+
+                            /* El estado de la aceleración puede ser acelerando, decelerando o
+                            velocidad constante, dependiendo del resultado de la aceleración
+                            (que es vf-vo/tf-to). Aquí obviaremos el tiempo, y nos limitaremos a
+                            la diferencia de velocidades (ya que tf-to siempre será >=0).
+                            Además, sólo podremos medir mientras tengamos una última localización
+                            correcta, luego aquí sí actualizamos el valor del texto, y no antes. */
+                            if ((location.getSpeed() - ultima_localizacion.getSpeed()) > 0)
+                                est_aceleracion = "Acelerando";
+                            else if ((location.getSpeed() - ultima_localizacion.getSpeed()) < 0)
+                                est_aceleracion = "Decelerando";
+                            else
+                                est_aceleracion = "Velocidad constante";
                         }
                         dist.setText(distancia);
+                        acel.setText(est_aceleracion);
 
                         Log.d("Activity", "Punto mandado a guardar");
 
-                    /* Aumentamos el número de puntos y comprobamos que no se ha llegado al límite
-                    de puntos marcado. */
+                        /* Aumentamos el número de puntos y comprobamos que no se ha llegado al límite
+                        de puntos marcado. */
                         puntosGuardados++;
                         if (puntosGuardados == LIMITE_BBDD) {
                             // Hemos llegado al límite: debemos acabar el entrenamiento.
